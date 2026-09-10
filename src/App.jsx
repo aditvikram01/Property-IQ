@@ -543,10 +543,10 @@ function LocalReport({ report, form }) {
 
 function HomeTab({ setTab }) {
   const features = [
-    { icon: "🔍", title: "Can I Buy This Property?", desc: "A personalized eligibility report — permissions, restrictions, costs, and the documents you'll need.", tab: "eligibility", color: "#1d4ed8" },
+    { icon: "🔍", title: "Can I Buy This Property?", desc: "A personalized eligibility report — permissions, restrictions, costs, and the documents you'll need.", tab: "eligibility", color: "#0d9488" },
     { icon: "📄", title: "Decode My Contract", desc: "Upload a deed or agreement for a plain-language explanation, and a redline of risky clauses.", tab: "understand", color: "#dc2626" },
-    { icon: "💰", title: "Compare Registration Costs", desc: "Stamp duty, registration charges, and exemptions side by side across states.", tab: "stampduty", color: "#d97706" },
-    { icon: "🛠️", title: "Property Law Toolkit", desc: "Unit conversion, property identifiers, registration workflows, exemptions, and jurisdiction guidance.", tab: "tools", color: "#7c3aed" },
+    { icon: "💰", title: "Compare Registration Costs", desc: "Stamp duty, registration charges, and exemptions side by side across states.", tab: "stampduty", color: "#c2410c" },
+    { icon: "🛠️", title: "Property Law Toolkit", desc: "Unit conversion, property identifiers, registration workflows, exemptions, and jurisdiction guidance.", tab: "tools", color: "#9333ea" },
   ];
   const mistakes = [
     { mi: "🚫", t: "Buying land you're not legally allowed to purchase" },
