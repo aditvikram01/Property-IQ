@@ -543,10 +543,10 @@ function LocalReport({ report, form }) {
 
 function HomeTab({ setTab }) {
   const features = [
-    { icon: "🔍", title: "Can I Buy This Property?", desc: "A personalized eligibility report — permissions, restrictions, costs, and the documents you'll need.", tab: "eligibility", color: "#0d9488" },
+    { icon: "🔍", title: "Can I Buy This Property?", desc: "A personalized eligibility report — permissions, restrictions, costs, and the documents you'll need.", tab: "eligibility", color: "#1d4ed8" },
     { icon: "📄", title: "Decode My Contract", desc: "Upload a deed or agreement for a plain-language explanation, and a redline of risky clauses.", tab: "understand", color: "#dc2626" },
-    { icon: "💰", title: "Compare Registration Costs", desc: "Stamp duty, registration charges, and exemptions side by side across states.", tab: "stampduty", color: "#c2410c" },
-    { icon: "🛠️", title: "Property Law Toolkit", desc: "Unit conversion, property identifiers, registration workflows, exemptions, and jurisdiction guidance.", tab: "tools", color: "#9333ea" },
+    { icon: "💰", title: "Compare Registration Costs", desc: "Stamp duty, registration charges, and exemptions side by side across states.", tab: "stampduty", color: "#d97706" },
+    { icon: "🛠️", title: "Property Law Toolkit", desc: "Unit conversion, property identifiers, registration workflows, exemptions, and jurisdiction guidance.", tab: "tools", color: "#7c3aed" },
   ];
   const mistakes = [
     { mi: "🚫", t: "Buying land you're not legally allowed to purchase" },
@@ -559,13 +559,16 @@ function HomeTab({ setTab }) {
   return (
     <div className="home">
       <section className="hero">
+        <svg className="hero-map-bg" viewBox={INDIA_MAP.viewBox} aria-hidden="true">
+          {INDIA_MAP.locations.map((l) => <path key={l.id} d={l.path} />)}
+        </svg>
         <div className="hero-inner">
           <div className="hero-badge">{"⚖️"}</div>
-          <div className="hero-kicker">PropertyIQ · Know before you buy</div>
+          <div className="hero-kicker">Your cross-state property copilot</div>
           <h1 className="hero-title">Buy property with confidence.</h1>
           <p className="hero-sub">
-            Cross-state property in India is full of traps — who can buy, what it costs, and what's hidden in the contract.
-            PropertyIQ answers all of it in plain language, backed by real Indian law.
+            PropertyIQ is your go-to copilot for buying property across states in India — who's allowed to buy,
+            what it will cost, and what's hidden in the contract. All in plain language, backed by real Indian law.
           </p>
           <div className="hero-cta-row">
             <button className="btn btn-primary hero-cta" onClick={() => setTab("eligibility")}>Check if you can buy {"→"}</button>
@@ -574,7 +577,7 @@ function HomeTab({ setTab }) {
           <div className="hero-stats">
             <div><b>4</b><span>states covered</span></div>
             <div><b>Real</b><span>statutes cited</span></div>
-            <div><b>Zero</b><span>legal jargon</span></div>
+            <div><b>Daily</b><span>law updates</span></div>
           </div>
         </div>
       </section>
