@@ -8,6 +8,7 @@ import {
   DOCUMENT_CHECKLIST, SAMPLE_CONTRACTS,
 } from "./data/constants";
 import { PROPERTY_LAW_DB } from "./data/propertyLawDatabase";
+import INDIA_MAP from "./data/indiaMap.js";
 import { parseDocument } from "./lib/parseDocument";
 import { callGemini, callGeminiJSON, GEMINI_KEY_STORAGE, DEFAULT_GEMINI_KEY } from "./lib/gemini";
 import {
@@ -712,42 +713,47 @@ function AgentReport({ data }) {
   );
 }
 
-// Approx. positions of the four supported states over the India silhouette, with
-// a one-line eligibility hook shown when that state is selected.
-const STATE_GEO = {
-  Punjab: { x: 92, y: 78, hook: "No identity-based ban — mainly ceiling & anti-fragmentation limits." },
-  "Himachal Pradesh": { x: 116, y: 66, hook: "Section 118 blocks non-agriculturists / outsiders from farmland." },
-  Maharashtra: { x: 104, y: 210, hook: "Section 63 needs agriculturist proof for farmland outside city limits." },
-  Karnataka: { x: 126, y: 262, hook: "Liberalized in 2020 — open to non-agriculturist buyers." },
+// The four supported states: ISO id (matches @svg-maps/india) + a one-line hook.
+const STATE_ID = { "Himachal Pradesh": "hp", Maharashtra: "mh", Karnataka: "ka", Punjab: "pb" };
+const SUPPORTED_IDS = new Set(Object.values(STATE_ID));
+const STATE_HOOK = {
+  "Himachal Pradesh": "Section 118 blocks non-agriculturists / outsiders from farmland.",
+  Maharashtra: "Section 63 needs agriculturist proof for farmland outside city limits.",
+  Karnataka: "Liberalized in 2020 — open to non-agriculturist buyers.",
+  Punjab: "No identity-based ban — mainly ceiling & anti-fragmentation limits.",
 };
 
-// India outline (stylised) + a glowing marker on the chosen property state.
+// Real India map (state borders) with the chosen property state filled green.
 function StateMap({ state }) {
-  const sel = STATE_GEO[state];
+  const activeId = STATE_ID[state];
   return (
     <div className="statemap">
-      <svg viewBox="0 0 300 340" className="statemap-svg" role="img" aria-label={state ? `India map highlighting ${state}` : "India map"}>
-        <path className="india-outline" d="M96,26 L118,22 130,34 126,48 146,52 166,44 182,56 176,74 196,88 188,108 206,124 198,150 176,150 170,168 184,188 168,208 174,236 156,238 150,262 140,300 130,330 122,332 118,306 106,282 112,254 94,232 100,210 84,196 92,176 72,166 66,148 80,138 72,118 88,106 82,84 98,70 92,48 96,26 Z" />
-        {Object.entries(STATE_GEO).map(([name, g]) => {
-          const on = name === state;
-          return (
-            <g key={name}>
-              {on && <circle cx={g.x} cy={g.y} r="16" className="sm-pulse" />}
-              <circle cx={g.x} cy={g.y} r={on ? 7 : 4} className={`sm-dot ${on ? "on" : ""}`} />
-            </g>
-          );
-        })}
-      </svg>
+      <div className="statemap-mapwrap">
+        <svg viewBox={INDIA_MAP.viewBox} className="india-map" role="img" preserveAspectRatio="xMidYMid meet"
+          aria-label={state ? `Map of India highlighting ${state}` : "Map of India"}>
+          {INDIA_MAP.locations.map((loc) => {
+            const on = loc.id === activeId;
+            const sup = SUPPORTED_IDS.has(loc.id);
+            return (
+              <path key={loc.id} d={loc.path}
+                className={`imap-state${sup ? " sup" : ""}${on ? " on" : ""}`}>
+                <title>{loc.name}</title>
+              </path>
+            );
+          })}
+        </svg>
+      </div>
       <div className="statemap-info">
         {state ? (
           <>
             <div className="sm-here">{"📍"} Property in</div>
             <div className="sm-state">{state}</div>
-            {sel?.hook && <div className="sm-hook">{sel.hook}</div>}
+            {STATE_HOOK[state] && <div className="sm-hook">{STATE_HOOK[state]}</div>}
           </>
         ) : (
-          <div className="sm-empty">Pick the <b>property state</b> to locate it and preview the key rule.</div>
+          <div className="sm-empty">Pick the <b>property state</b> to see it on the map and preview the key rule.</div>
         )}
+        <div className="sm-legend"><span className="sm-legend-dot" /> Covered states · <span className="sm-legend-sel" /> your selection</div>
       </div>
     </div>
   );

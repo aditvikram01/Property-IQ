@@ -366,18 +366,23 @@ details.acc[open] > summary::before { transform: rotate(90deg); }
 .rl-copy { background: var(--success); color: #fff; border: none; border-radius: 5px; padding: 3px 9px; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; text-transform: none; letter-spacing: 0; }
 .rl-copy:hover { opacity: 0.9; }
 
-/* ===== State locator map (eligibility) ===== */
-.statemap { display: grid; grid-template-columns: 116px 1fr; gap: 16px; align-items: center; background: linear-gradient(135deg, var(--accent-light), var(--card) 60%); border: 1px solid var(--border); border-radius: 14px; padding: 14px 18px; margin-bottom: 16px; }
-.statemap-svg { width: 106px; height: 126px; display: block; }
-.india-outline { fill: rgba(194,65,12,0.07); stroke: rgba(194,65,12,0.35); stroke-width: 1.4; stroke-linejoin: round; }
-.sm-dot { fill: var(--fg-secondary); opacity: 0.45; transition: all 0.2s; }
-.sm-dot.on { fill: var(--accent); opacity: 1; }
-.sm-pulse { fill: var(--accent); transform-origin: center; animation: smpulse 1.9s ease-out infinite; }
-@keyframes smpulse { 0% { r: 6px; opacity: 0.4; } 100% { r: 20px; opacity: 0; } }
+/* ===== State locator map (eligibility) — real India map ===== */
+.statemap { display: grid; grid-template-columns: 172px 1fr; gap: 20px; align-items: center; background: linear-gradient(135deg, var(--accent-light), var(--card) 62%); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; margin-bottom: 16px; }
+@media (max-width: 520px) { .statemap { grid-template-columns: 1fr; justify-items: center; text-align: center; } }
+.statemap-mapwrap { display: flex; align-items: center; justify-content: center; }
+.india-map { width: 100%; max-width: 168px; height: auto; max-height: 240px; display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.06)); }
+.imap-state { fill: #e8e3db; stroke: var(--card); stroke-width: 1; transition: fill 0.3s ease, stroke 0.3s ease; }
+.imap-state.sup { fill: #f1d9ca; }
+.imap-state.on { fill: var(--success); stroke: #14532d; stroke-width: 1.3; }
+.statemap-info { align-self: center; }
 .statemap-info .sm-here { font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 800; color: var(--fg-secondary); }
-.sm-state { font-family: 'Source Serif 4', Georgia, serif; font-size: 22px; font-weight: 800; line-height: 1.1; margin: 3px 0 7px; }
+.sm-state { font-family: 'Source Serif 4', Georgia, serif; font-size: 23px; font-weight: 800; line-height: 1.1; margin: 3px 0 7px; }
 .sm-hook { font-size: 12px; color: var(--fg-secondary); line-height: 1.5; }
 .sm-empty { font-size: 13px; color: var(--fg-secondary); line-height: 1.55; }
+.sm-legend { margin-top: 12px; font-size: 10.5px; color: var(--fg-secondary); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.sm-legend-dot, .sm-legend-sel { width: 11px; height: 11px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
+.sm-legend-dot { background: #f1d9ca; border: 1px solid #e2c4b3; }
+.sm-legend-sel { background: var(--success); }
 
 /* ===== Eligibility wizard (stepped form) ===== */
 .wizard { padding: 0; overflow: hidden; }
