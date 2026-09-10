@@ -765,6 +765,7 @@ function EligibilityTab() {
   const [agentInfo, setAgentInfo] = useState(null);   // null while probing; { available, ... } after
   const [agentData, setAgentData] = useState(null);    // { report, trace } from the agent
   const [agentError, setAgentError] = useState("");
+  const [step, setStep] = useState(0);
   const f = (k, v) => setForm((p) => ({ ...p, [k]: v, ...(k === "propertyState" ? { area: "", pincode: "" } : {}) }));
   const areas = form.propertyState ? AREA_CATEGORIES[form.propertyState] || [] : [];
   const PINCODES = {
@@ -833,77 +834,112 @@ function EligibilityTab() {
 
       <StateMap state={form.propertyState} />
 
-      <div className="card">
-        <div className="form-grid">
-          <div><label className="form-label">Your Home State</label>
-            <select value={form.buyerState} onChange={(e) => f("buyerState", e.target.value)} className="form-select">
-              <option value="">Select...</option>{STATES.map((s) => <option key={s}>{s}</option>)}</select></div>
-          <div><label className="form-label">Property State</label>
-            <select value={form.propertyState} onChange={(e) => f("propertyState", e.target.value)} className="form-select">
-              <option value="">Select...</option>{STATES.map((s) => <option key={s}>{s}</option>)}</select></div>
-          <div><label className="form-label">Property Pincode</label>
-            <select value={form.pincode} onChange={(e) => f("pincode", e.target.value)} className="form-select" disabled={!form.propertyState}>
-              <option value="">{form.propertyState ? "Select pincode..." : "Select property state first"}</option>
-              {(PINCODES[form.propertyState] || []).map((p) => <option key={p.v} value={p.v}>{p.l}</option>)}
-            </select></div>
-          <div><label className="form-label">Area Category</label>
-            <select value={form.area} onChange={(e) => f("area", e.target.value)} className="form-select">
-              <option value="">Select...</option>{areas.map((a) => <option key={a}>{a}</option>)}</select></div>
-          <div><label className="form-label">Transaction Type</label>
-            <select value={form.txnType} onChange={(e) => f("txnType", e.target.value)} className="form-select">
-              <option value="">Select...</option>{TRANSACTION_TYPES.map((t) => <option key={t}>{t}</option>)}</select></div>
-          <div><label className="form-label">Property Type (Agricultural / Non-Agricultural)</label>
-            <select value={form.propType} onChange={(e) => f("propType", e.target.value)} className="form-select">
-              <option value="">Select...</option>{PROPERTY_TYPES.map((t) => <option key={t}>{t}</option>)}</select></div>
-          <div><label className="form-label">Buyer Gender</label>
-            <select value={form.gender} onChange={(e) => f("gender", e.target.value)} className="form-select">
-              <option value="">Select...</option>{GENDERS.map((g) => <option key={g}>{g}</option>)}</select></div>
-          <div><label className="form-label">Buyer Age</label>
-            <input type="text" value={form.age} onChange={(e) => f("age", e.target.value.replace(/[^0-9]/g, "").slice(0, 3))}
-              placeholder="e.g. 35" className="form-input" inputMode="numeric" /></div>
-          <div><label className="form-label">Buyer Type</label>
-            <select value={form.buyerType} onChange={(e) => f("buyerType", e.target.value)} className="form-select">
-              {BUYER_TYPES.map((t) => <option key={t}>{t}</option>)}</select></div>
-          <div><label className="form-label">Approx. Property Value ({"₹"})</label>
-            <input type="text" value={form.value} onChange={(e) => f("value", e.target.value.replace(/[^0-9]/g, ""))}
-              placeholder="e.g. 5000000" className="form-input" /></div>
-          <div><label className="form-label">Resident or Outsider</label>
-            <select value={form.residency} onChange={(e) => f("residency", e.target.value)} className="form-select">
-              <option value="">Select...</option>
-              {["Resident of the property state", "Outsider (resident of another state)"].map((t) => <option key={t}>{t}</option>)}
-            </select></div>
-          <div><label className="form-label">Buying Capacity</label>
-            <select value={form.buyingCapacity} onChange={(e) => f("buyingCapacity", e.target.value)} className="form-select">
-              <option value="">Select...</option>
-              {["Individual", "Company / LLP", "Bank / Financial institution", "Trust / Society", "Government / PSU"].map((t) => <option key={t}>{t}</option>)}
-            </select></div>
-          <div><label className="form-label">Municipal / Rural Status</label>
-            <select value={form.municipalStatus} onChange={(e) => f("municipalStatus", e.target.value)} className="form-select">
-              <option value="">Select...</option>
-              {["Within municipal / notified limits", "Outside municipal / rural limits", "Unsure"].map((t) => <option key={t}>{t}</option>)}
-            </select></div>
-          <div><label className="form-label">Relationship with Seller</label>
-            <select value={form.sellerRelation} onChange={(e) => f("sellerRelation", e.target.value)} className="form-select">
-              <option value="">Select...</option>
-              {["Not a blood relative", "Spouse", "Child", "Grandchild", "Parent", "Sibling", "Other relative"].map((t) => <option key={t}>{t}</option>)}
-            </select></div>
-          <div><label className="form-label">Tribal Classification</label>
-            <select value={form.tribalStatus} onChange={(e) => f("tribalStatus", e.target.value)} className="form-select">
-              <option value="">Select...</option>
-              {["Non-tribal", "Tribal (Scheduled Tribe)", "Unsure"].map((t) => <option key={t}>{t}</option>)}
-            </select></div>
-          {isRentLike(form.txnType) && (
-            <div><label className="form-label">Lease Term (months)</label>
-              <input type="text" value={form.leaseMonths} onChange={(e) => f("leaseMonths", e.target.value.replace(/[^0-9]/g, ""))}
-                placeholder="e.g. 11 or 24" className="form-input" /></div>
-          )}
-        </div>
-        <button onClick={runCheck} disabled={!canSubmit || loading}
-          className={`btn ${canSubmit ? "btn-primary" : ""} btn-full`}
-          style={{ marginTop: 16 }}>
-          {loading ? <LoadingDots /> : "Check Eligibility"}
-        </button>
-      </div>
+      {(() => {
+        const steps = [
+          { label: "Location", req: ["buyerState", "propertyState", "pincode", "area"] },
+          { label: "The deal", req: ["txnType", "propType", "municipalStatus"] },
+          { label: "About you", req: ["gender", "age", "value", "residency", "buyingCapacity"] },
+        ];
+        const done = (i) => steps[i].req.every((k) => (k === "pincode" ? form.pincode.length === 6 : !!form[k]));
+        return (
+          <div className="card wizard">
+            <div className="wiz-steps">
+              {steps.map((s, i) => (
+                <button key={s.label} type="button" className={`wiz-step ${i === step ? "on" : ""} ${done(i) && i !== step ? "done" : ""}`} onClick={() => setStep(i)}>
+                  <span className="wiz-num">{done(i) && i !== step ? "✓" : i + 1}</span>
+                  <span className="wiz-label">{s.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="wiz-body" key={step}>
+              {step === 0 && (
+                <div className="form-grid">
+                  <div><label className="form-label">Your Home State</label>
+                    <select value={form.buyerState} onChange={(e) => f("buyerState", e.target.value)} className="form-select">
+                      <option value="">Select...</option>{STATES.map((s) => <option key={s}>{s}</option>)}</select></div>
+                  <div><label className="form-label">Property State</label>
+                    <select value={form.propertyState} onChange={(e) => f("propertyState", e.target.value)} className="form-select">
+                      <option value="">Select...</option>{STATES.map((s) => <option key={s}>{s}</option>)}</select></div>
+                  <div><label className="form-label">Property Pincode</label>
+                    <select value={form.pincode} onChange={(e) => f("pincode", e.target.value)} className="form-select" disabled={!form.propertyState}>
+                      <option value="">{form.propertyState ? "Select pincode..." : "Select property state first"}</option>
+                      {(PINCODES[form.propertyState] || []).map((p) => <option key={p.v} value={p.v}>{p.l}</option>)}
+                    </select></div>
+                  <div><label className="form-label">Area Category</label>
+                    <select value={form.area} onChange={(e) => f("area", e.target.value)} className="form-select">
+                      <option value="">Select...</option>{areas.map((a) => <option key={a}>{a}</option>)}</select></div>
+                </div>
+              )}
+
+              {step === 1 && (
+                <div className="form-grid">
+                  <div><label className="form-label">Transaction Type</label>
+                    <select value={form.txnType} onChange={(e) => f("txnType", e.target.value)} className="form-select">
+                      <option value="">Select...</option>{TRANSACTION_TYPES.map((t) => <option key={t}>{t}</option>)}</select></div>
+                  <div><label className="form-label">Property Type (Agricultural / Non-Agricultural)</label>
+                    <select value={form.propType} onChange={(e) => f("propType", e.target.value)} className="form-select">
+                      <option value="">Select...</option>{PROPERTY_TYPES.map((t) => <option key={t}>{t}</option>)}</select></div>
+                  <div><label className="form-label">Municipal / Rural Status</label>
+                    <select value={form.municipalStatus} onChange={(e) => f("municipalStatus", e.target.value)} className="form-select">
+                      <option value="">Select...</option>
+                      {["Within municipal / notified limits", "Outside municipal / rural limits", "Unsure"].map((t) => <option key={t}>{t}</option>)}
+                    </select></div>
+                  {isRentLike(form.txnType) && (
+                    <div><label className="form-label">Lease Term (months)</label>
+                      <input type="text" value={form.leaseMonths} onChange={(e) => f("leaseMonths", e.target.value.replace(/[^0-9]/g, ""))}
+                        placeholder="e.g. 11 or 24" className="form-input" /></div>
+                  )}
+                </div>
+              )}
+
+              {step === 2 && (
+                <div className="form-grid">
+                  <div><label className="form-label">Buyer Gender</label>
+                    <select value={form.gender} onChange={(e) => f("gender", e.target.value)} className="form-select">
+                      <option value="">Select...</option>{GENDERS.map((g) => <option key={g}>{g}</option>)}</select></div>
+                  <div><label className="form-label">Buyer Age</label>
+                    <input type="text" value={form.age} onChange={(e) => f("age", e.target.value.replace(/[^0-9]/g, "").slice(0, 3))}
+                      placeholder="e.g. 35" className="form-input" inputMode="numeric" /></div>
+                  <div><label className="form-label">Buyer Type</label>
+                    <select value={form.buyerType} onChange={(e) => f("buyerType", e.target.value)} className="form-select">
+                      {BUYER_TYPES.map((t) => <option key={t}>{t}</option>)}</select></div>
+                  <div><label className="form-label">Approx. Property Value ({"₹"})</label>
+                    <input type="text" value={form.value} onChange={(e) => f("value", e.target.value.replace(/[^0-9]/g, ""))}
+                      placeholder="e.g. 5000000" className="form-input" /></div>
+                  <div><label className="form-label">Resident or Outsider</label>
+                    <select value={form.residency} onChange={(e) => f("residency", e.target.value)} className="form-select">
+                      <option value="">Select...</option>
+                      {["Resident of the property state", "Outsider (resident of another state)"].map((t) => <option key={t}>{t}</option>)}
+                    </select></div>
+                  <div><label className="form-label">Buying Capacity</label>
+                    <select value={form.buyingCapacity} onChange={(e) => f("buyingCapacity", e.target.value)} className="form-select">
+                      <option value="">Select...</option>
+                      {["Individual", "Company / LLP", "Bank / Financial institution", "Trust / Society", "Government / PSU"].map((t) => <option key={t}>{t}</option>)}
+                    </select></div>
+                  <div><label className="form-label">Relationship with Seller</label>
+                    <select value={form.sellerRelation} onChange={(e) => f("sellerRelation", e.target.value)} className="form-select">
+                      <option value="">Select...</option>
+                      {["Not a blood relative", "Spouse", "Child", "Grandchild", "Parent", "Sibling", "Other relative"].map((t) => <option key={t}>{t}</option>)}
+                    </select></div>
+                  <div><label className="form-label">Tribal Classification</label>
+                    <select value={form.tribalStatus} onChange={(e) => f("tribalStatus", e.target.value)} className="form-select">
+                      <option value="">Select...</option>
+                      {["Non-tribal", "Tribal (Scheduled Tribe)", "Unsure"].map((t) => <option key={t}>{t}</option>)}
+                    </select></div>
+                </div>
+              )}
+            </div>
+
+            <div className="wiz-nav">
+              {step > 0 ? <button className="btn btn-outline" type="button" onClick={() => setStep(step - 1)}>{"← Back"}</button> : <span />}
+              {step < steps.length - 1
+                ? <button type="button" className={`btn ${done(step) ? "btn-primary" : ""}`} disabled={!done(step)} onClick={() => setStep(step + 1)}>{"Next →"}</button>
+                : <button onClick={runCheck} disabled={!canSubmit || loading} className={`btn ${canSubmit ? "btn-primary" : ""}`}>{loading ? <LoadingDots /> : "Check Eligibility"}</button>}
+            </div>
+          </div>
+        );
+      })()}
 
       {form.propertyState && !loading && !result && !agentData && (
         <QuickInfoPanel state={form.propertyState} txnType={form.txnType} />
