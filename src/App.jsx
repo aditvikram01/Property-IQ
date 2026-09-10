@@ -712,6 +712,47 @@ function AgentReport({ data }) {
   );
 }
 
+// Approx. positions of the four supported states over the India silhouette, with
+// a one-line eligibility hook shown when that state is selected.
+const STATE_GEO = {
+  Punjab: { x: 92, y: 78, hook: "No identity-based ban — mainly ceiling & anti-fragmentation limits." },
+  "Himachal Pradesh": { x: 116, y: 66, hook: "Section 118 blocks non-agriculturists / outsiders from farmland." },
+  Maharashtra: { x: 104, y: 210, hook: "Section 63 needs agriculturist proof for farmland outside city limits." },
+  Karnataka: { x: 126, y: 262, hook: "Liberalized in 2020 — open to non-agriculturist buyers." },
+};
+
+// India outline (stylised) + a glowing marker on the chosen property state.
+function StateMap({ state }) {
+  const sel = STATE_GEO[state];
+  return (
+    <div className="statemap">
+      <svg viewBox="0 0 300 340" className="statemap-svg" role="img" aria-label={state ? `India map highlighting ${state}` : "India map"}>
+        <path className="india-outline" d="M96,26 L118,22 130,34 126,48 146,52 166,44 182,56 176,74 196,88 188,108 206,124 198,150 176,150 170,168 184,188 168,208 174,236 156,238 150,262 140,300 130,330 122,332 118,306 106,282 112,254 94,232 100,210 84,196 92,176 72,166 66,148 80,138 72,118 88,106 82,84 98,70 92,48 96,26 Z" />
+        {Object.entries(STATE_GEO).map(([name, g]) => {
+          const on = name === state;
+          return (
+            <g key={name}>
+              {on && <circle cx={g.x} cy={g.y} r="16" className="sm-pulse" />}
+              <circle cx={g.x} cy={g.y} r={on ? 7 : 4} className={`sm-dot ${on ? "on" : ""}`} />
+            </g>
+          );
+        })}
+      </svg>
+      <div className="statemap-info">
+        {state ? (
+          <>
+            <div className="sm-here">{"📍"} Property in</div>
+            <div className="sm-state">{state}</div>
+            {sel?.hook && <div className="sm-hook">{sel.hook}</div>}
+          </>
+        ) : (
+          <div className="sm-empty">Pick the <b>property state</b> to locate it and preview the key rule.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function EligibilityTab() {
   const [form, setForm] = useState({
     buyerState: "", propertyState: "", pincode: "", txnType: "", propType: "",
@@ -789,6 +830,8 @@ function EligibilityTab() {
           {STATE_LANGUAGES[form.propertyState] && ` Documents must be in ${STATE_LANGUAGES[form.propertyState].registration.join(" or ")}.`}
         </div>
       )}
+
+      <StateMap state={form.propertyState} />
 
       <div className="card">
         <div className="form-grid">
@@ -929,6 +972,7 @@ function normalizeRisk(data) {
     severity: ["high", "medium", "low"].includes(f && f.severity) ? f.severity : "medium",
     why: String((f && f.why) || ""),
     suggestion: String((f && f.suggestion) || ""),
+    improvedClause: String((f && f.improvedClause) || ""),
     legalBasis: f && f.legalBasis ? String(f.legalBasis) : null,
   }));
   clean.sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
@@ -943,39 +987,105 @@ function Disclaimer() {
   );
 }
 
-function RiskCards({ data }) {
-  if (!data.findings.length) {
+// Locate each finding's verbatim clauseQuote inside the contract text so we can
+// highlight it inline. Exact case-insensitive match; overlaps are dropped.
+function findClauseRanges(text, findings) {
+  const lower = text.toLowerCase();
+  const ranges = [];
+  findings.forEach((f, i) => {
+    const q = (f.clauseQuote || "").trim();
+    if (q.length < 6) return;
+    const idx = lower.indexOf(q.toLowerCase());
+    if (idx === -1) return; // paraphrased/translated → shown in the list, not highlighted
+    ranges.push({ start: idx, end: idx + q.length, i });
+  });
+  ranges.sort((a, b) => a.start - b.start || b.end - a.end);
+  const out = [];
+  let lastEnd = -1;
+  for (const r of ranges) { if (r.start >= lastEnd) { out.push(r); lastEnd = r.end; } }
+  return out;
+}
+
+function RedlineDetail({ f }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className={`rl-detail rl-detail-${f.severity}`}>
+      <div className="rl-detail-h">
+        <span className={`sev sev-${f.severity}`}>{f.severity.toUpperCase()}</span>
+        <span className="why-title" style={{ marginBottom: 0 }}>{f.risk}</span>
+      </div>
+      {f.clauseQuote && <div className="rl-quote">{"“"}{f.clauseQuote}{"”"}</div>}
+      <div className="why-body" style={{ marginTop: 8 }}>{f.why}</div>
+      {f.suggestion && <div className="fix-box"><b>{"✔ "}</b>{f.suggestion}</div>}
+      {f.improvedClause && (
+        <div className="rl-improved">
+          <div className="rl-improved-h">
+            <span>{"✍️ "}Suggested rewrite</span>
+            <button className="rl-copy" onClick={() => { try { navigator.clipboard?.writeText(f.improvedClause); } catch { /* clipboard blocked */ } setCopied(true); setTimeout(() => setCopied(false), 1200); }}>
+              {copied ? "Copied ✓" : "Copy"}
+            </button>
+          </div>
+          <div className="rl-improved-body">{f.improvedClause}</div>
+        </div>
+      )}
+      {f.legalBasis && <div style={{ fontSize: 11, color: "var(--accent)", marginTop: 10, fontWeight: 600 }}>{"📖 "}{f.legalBasis}</div>}
+    </div>
+  );
+}
+
+// Redlining view: the contract with risky clauses highlighted; click a highlight
+// (or a chip) to open its explanation + a suggested safer rewrite.
+function RedlineView({ data, contractText }) {
+  const findings = data.findings || [];
+  const ranges = findClauseRanges(contractText || "", findings);
+  const matched = new Set(ranges.map((r) => r.i));
+  const [active, setActive] = useState(ranges.length ? ranges[0].i : 0);
+
+  if (!findings.length) {
     return (
       <div className="card ai-output">
-        <p style={{ fontSize: 13 }}>{data.summary || "No specific risks were identified."}</p>
+        <p style={{ fontSize: 13 }}>{data.summary || "No specific risks were identified in this contract."}</p>
         <Disclaimer />
       </div>
     );
   }
+
+  const segs = [];
+  let cursor = 0;
+  ranges.forEach((r) => {
+    if (r.start > cursor) segs.push({ t: contractText.slice(cursor, r.start), i: null });
+    segs.push({ t: contractText.slice(r.start, r.end), i: r.i });
+    cursor = r.end;
+  });
+  if (cursor < (contractText || "").length) segs.push({ t: contractText.slice(cursor), i: null });
+
   return (
-    <div className="card ai-output report">
-      {data.summary && <div className="verdict-headline" style={{ fontSize: 16, marginBottom: 14 }}>{data.summary}</div>}
-      {data.findings.map((f, i) => (
-        <div key={i} className="why-card">
-          <div style={{ marginBottom: 4 }}>
-            <span className={`sev sev-${f.severity}`}>{f.severity.toUpperCase()}</span>
-            <span className="why-title">{f.risk}</span>
-          </div>
-          {f.clauseQuote && (
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: "var(--fg-secondary)", background: "var(--bg)", borderRadius: 6, padding: "6px 9px", margin: "6px 0" }}>
-              {f.clauseRef ? <b>{f.clauseRef}: </b> : null}{"“"}{f.clauseQuote}{"”"}
-            </div>
-          )}
-          <div className="why-body">{f.why}</div>
-          {f.suggestion && <div className="fix-box"><b>{"✔ "}</b>{f.suggestion}</div>}
-          {f.legalBasis && (
-            <div style={{ fontSize: 11, color: "var(--accent)", marginTop: 8, fontWeight: 600 }}>
-              {"📖 "}{f.legalBasis}
-            </div>
-          )}
+    <div className="card report" style={{ padding: 0, overflow: "hidden" }}>
+      {data.summary && <div className="rl-summary">{data.summary}</div>}
+      <div className="rl-wrap">
+        <div className="rl-doc ai-output">
+          {segs.length ? segs.map((s, k) => (
+            s.i == null
+              ? <span key={k}>{s.t}</span>
+              : <mark key={k} className={`rl-mark rl-${findings[s.i].severity} ${active === s.i ? "rl-on" : ""}`}
+                  onClick={() => setActive(s.i)} title={findings[s.i].risk}>{s.t}</mark>
+          )) : <span style={{ color: "var(--fg-secondary)" }}>The contract text isn’t available to highlight — pick an issue below.</span>}
         </div>
-      ))}
-      <Disclaimer />
+        <div className="rl-side">
+          <div className="rl-count">{findings.length} issue{findings.length !== 1 ? "s" : ""} · {ranges.length} highlighted</div>
+          <div className="rl-list">
+            {findings.map((f, i) => (
+              <button key={i} className={`rl-chip rl-chip-${f.severity} ${active === i ? "on" : ""}`} onClick={() => setActive(i)}>
+                <span className={`rl-dot rl-dot-${f.severity}`} />
+                <span className="rl-chip-t">{f.risk}</span>
+                {!matched.has(i) && <span className="rl-nl">·not located</span>}
+              </button>
+            ))}
+          </div>
+          <RedlineDetail f={findings[active]} />
+        </div>
+      </div>
+      <div style={{ padding: "0 16px 12px" }}><Disclaimer /></div>
     </div>
   );
 }
@@ -1132,8 +1242,8 @@ function UnderstandTab({ geminiKey, setGeminiKey }) {
 
       {riskOut && (
         <>
-          <div className="doc-group-label">Risk Analysis · {language}</div>
-          <RiskCards data={riskOut} />
+          <div className="doc-group-label">Redline · risky clauses highlighted · {language}</div>
+          <RedlineView data={riskOut} contractText={text} />
         </>
       )}
     </div>
