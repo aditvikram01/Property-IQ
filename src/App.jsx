@@ -542,62 +542,70 @@ function LocalReport({ report, form }) {
 
 
 function HomeTab({ setTab }) {
+  const features = [
+    { icon: "🔍", title: "Can I Buy This Property?", desc: "A personalized eligibility report — permissions, restrictions, costs, and the documents you'll need.", tab: "eligibility", color: "#0d9488" },
+    { icon: "📄", title: "Decode My Contract", desc: "Upload a deed or agreement for a plain-language explanation, and a redline of risky clauses.", tab: "understand", color: "#dc2626" },
+    { icon: "💰", title: "Compare Registration Costs", desc: "Stamp duty, registration charges, and exemptions side by side across states.", tab: "stampduty", color: "#c2410c" },
+    { icon: "🛠️", title: "Property Law Toolkit", desc: "Unit conversion, property identifiers, registration workflows, exemptions, and jurisdiction guidance.", tab: "tools", color: "#9333ea" },
+  ];
+  const mistakes = [
+    { mi: "🚫", t: "Buying land you're not legally allowed to purchase" },
+    { mi: "💰", t: "Unexpected stamp duty and registration costs" },
+    { mi: "⚠️", t: "Hidden risks buried in the agreement you signed" },
+    { mi: "📑", t: "Missing permissions and mandatory documents" },
+    { mi: "⏱", t: "Delays and refusals caused by registration errors" },
+    { mi: "🗺️", t: "Cross-state rules that don't work like back home" },
+  ];
   return (
-    <div className="page">
-      <div style={{ textAlign: "center", padding: "40px 0 30px" }}>
-        <div style={{ fontSize: 48, marginBottom: 8 }}>{"⚖️"}</div>
-        <h1 style={{ fontSize: 30, fontWeight: 900, letterSpacing: -0.5, fontFamily: "'Source Serif 4', Georgia, serif" }}>
-          PropertyIQ
-        </h1>
-        <p style={{ fontSize: 13, color: "var(--accent)", fontWeight: 700, marginTop: 4, letterSpacing: 2 }}>
-          KNOW BEFORE YOU BUY
-        </p>
-        <h2 style={{ fontSize: 24, fontWeight: 900, letterSpacing: -0.4, marginTop: 20, fontFamily: "'Source Serif 4', Georgia, serif" }}>
-          Buy Property With Confidence
-        </h2>
-        <p style={{ fontSize: 14, color: "var(--fg-secondary)", marginTop: 10, lineHeight: 1.7, maxWidth: 560, margin: "10px auto 0" }}>
-          Check eligibility, compare costs, analyze contracts, and understand every legal requirement before you commit.
-        </p>
-        <p style={{ fontSize: 13, color: "var(--fg-secondary)", marginTop: 10, fontWeight: 600, fontStyle: "italic" }}>
-          Know if you can buy it. Know what it will cost. Know the risks.
-        </p>
-      </div>
-
-      <div className="feature-grid">
-        {[
-          { icon: "🔍", title: "Can I Buy This Property?", desc: "Get a personalized eligibility report showing permissions, restrictions, costs, and required documents.", tab: "eligibility", color: "#2563eb" },
-          { icon: "📄", title: "Decode My Contract", desc: "Upload any deed or agreement and receive a plain-language explanation plus risk analysis.", tab: "understand", color: "#dc2626" },
-          { icon: "💰", title: "Compare Registration Costs", desc: "Instantly compare stamp duty, registration charges, and exemptions across states.", tab: "stampduty", color: "#16a34a" },
-          { icon: "🛠️", title: "Property Law Toolkit", desc: "Unit conversion, property identifiers, registration workflows, exemptions, and jurisdiction guidance.", tab: "tools", color: "#9333ea" },
-        ].map((c) => (
-          <button key={c.tab} className="feature-card" onClick={() => setTab(c.tab)}
-            onMouseEnter={(e) => (e.currentTarget.style.borderColor = c.color)}
-            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}>
-            <div className="icon">{c.icon}</div>
-            <div className="title">{c.title}</div>
-            <div className="desc">{c.desc}</div>
-          </button>
-        ))}
-      </div>
-
-      <div className="card">
-        <div style={{ fontWeight: 800, marginBottom: 12, fontSize: 16 }}>Avoid Expensive Property Mistakes</div>
-        <div style={{ display: "grid", gap: 9, fontSize: 14, color: "var(--fg-secondary)", lineHeight: 1.5 }}>
-          {[
-            "🚫 Buying land you're not legally allowed to purchase",
-            "💰 Unexpected stamp duty and registration costs",
-            "⚠️ Hidden risks buried in agreements",
-            "📑 Missing permissions and documents",
-            "⏱ Delays caused by registration errors",
-          ].map((t, i) => <div key={i}>{t}</div>)}
+    <div className="home">
+      <section className="hero">
+        <div className="hero-inner">
+          <div className="hero-badge">{"⚖️"}</div>
+          <div className="hero-kicker">PropertyIQ · Know before you buy</div>
+          <h1 className="hero-title">Buy property with confidence.</h1>
+          <p className="hero-sub">
+            Cross-state property in India is full of traps — who can buy, what it costs, and what's hidden in the contract.
+            PropertyIQ answers all of it in plain language, backed by real Indian law.
+          </p>
+          <div className="hero-cta-row">
+            <button className="btn btn-primary hero-cta" onClick={() => setTab("eligibility")}>Check if you can buy {"→"}</button>
+            <button className="btn btn-outline hero-cta2" onClick={() => setTab("understand")}>Decode a contract</button>
+          </div>
+          <div className="hero-stats">
+            <div><b>4</b><span>states covered</span></div>
+            <div><b>Real</b><span>statutes cited</span></div>
+            <div><b>Zero</b><span>legal jargon</span></div>
+          </div>
         </div>
-        <p style={{ fontSize: 13.5, fontWeight: 700, marginTop: 14 }}>Get answers before spending money on a transaction.</p>
-        <p style={{ fontSize: 11, color: "var(--fg-secondary)", marginTop: 10 }}>
-          States covered: <strong>Himachal Pradesh, Maharashtra, Karnataka, Punjab</strong>.
-          This tool provides legal information, not legal advice.
-        </p>
-      </div>
+      </section>
 
+      <section className="home-body">
+        <div className="feature-grid">
+          {features.map((c) => (
+            <button key={c.tab} className="feature-card" onClick={() => setTab(c.tab)}
+              onMouseEnter={(e) => (e.currentTarget.style.borderColor = c.color)}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}>
+              <div className="fc-arrow">{"→"}</div>
+              <div className="icon-badge" style={{ background: c.color + "1a", color: c.color }}>{c.icon}</div>
+              <div className="title">{c.title}</div>
+              <div className="desc">{c.desc}</div>
+            </button>
+          ))}
+        </div>
+
+        <div className="mistakes">
+          <h3>Avoid expensive property mistakes</h3>
+          <div className="mistakes-grid">
+            {mistakes.map((m, i) => (
+              <div key={i} className="mistake"><span className="mi">{m.mi}</span><span>{m.t}</span></div>
+            ))}
+          </div>
+          <p style={{ fontSize: 13.5, fontWeight: 700, marginTop: 16 }}>Get answers before you spend a rupee on the transaction.</p>
+          <p style={{ fontSize: 11, color: "var(--fg-secondary)", marginTop: 8 }}>
+            States covered: <strong>Himachal Pradesh, Maharashtra, Karnataka, Punjab</strong>. Legal information, not legal advice.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }
@@ -1056,8 +1064,13 @@ function RedlineDetail({ f }) {
         <span className={`sev sev-${f.severity}`}>{f.severity.toUpperCase()}</span>
         <span className="why-title" style={{ marginBottom: 0 }}>{f.risk}</span>
       </div>
-      {f.clauseQuote && <div className="rl-quote">{"“"}{f.clauseQuote}{"”"}</div>}
-      <div className="why-body" style={{ marginTop: 8 }}>{f.why}</div>
+      {f.clauseQuote && (
+        <>
+          <div className="rl-lbl">In your contract</div>
+          <div className="rl-quote">{"“"}{f.clauseQuote}{"”"}</div>
+        </>
+      )}
+      <div className="why-body" style={{ marginTop: 10 }}>{f.why}</div>
       {f.suggestion && <div className="fix-box"><b>{"✔ "}</b>{f.suggestion}</div>}
       {f.improvedClause && (
         <div className="rl-improved">
@@ -1081,7 +1094,8 @@ function RedlineView({ data, contractText }) {
   const findings = data.findings || [];
   const ranges = findClauseRanges(contractText || "", findings);
   const matched = new Set(ranges.map((r) => r.i));
-  const [active, setActive] = useState(ranges.length ? ranges[0].i : 0);
+  const [active, setActive] = useState(0); // findings are severity-sorted → open on the most severe
+  const counts = findings.reduce((a, f) => { a[f.severity] = (a[f.severity] || 0) + 1; return a; }, {});
 
   if (!findings.length) {
     return (
@@ -1103,6 +1117,14 @@ function RedlineView({ data, contractText }) {
 
   return (
     <div className="card report" style={{ padding: 0, overflow: "hidden" }}>
+      <div className="rl-head">
+        <div className="rl-head-title">{"⚖️"} Contract redline</div>
+        <div className="rl-head-pills">
+          {["high", "medium", "low"].map((s) => counts[s]
+            ? <span key={s} className={`rl-pill rl-pill-${s}`}>{counts[s]} {s}</span>
+            : null)}
+        </div>
+      </div>
       {data.summary && <div className="rl-summary">{data.summary}</div>}
       <div className="rl-wrap">
         <div className="rl-doc ai-output">
