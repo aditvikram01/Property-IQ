@@ -647,10 +647,13 @@ function AgentReport({ data }) {
   return (
     <div className="card report">
       <h3 style={{ fontSize: 18, fontWeight: 900, marginBottom: 8 }}>Eligibility Assessment</h3>
-      <div style={{ marginBottom: 12 }}>
+      <div style={{ marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
         <span className={`badge ${verdictBadgeClass(report.verdict)}`}>Status: {verdictStatus(report.verdict)}</span>
+        {report.confidence && <span className="badge badge-info">Confidence: {String(report.confidence).replace(/^./, (c) => c.toUpperCase())}</span>}
+        {report.asOf && <span className="report-note" style={{ margin: 0 }}>As of {report.asOf}</span>}
       </div>
-      {report.summary && <div className="verdict-headline" style={{ fontSize: 16, marginBottom: 14 }}>{report.summary}</div>}
+      {report.summary && <div className="verdict-headline" style={{ fontSize: 16, marginBottom: 8 }}>{report.summary}</div>}
+      {report.confidenceReason && <div className="report-note" style={{ marginBottom: 12 }}>{report.confidenceReason}</div>}
 
       {sorted.map((fd, i) => (
         <div key={i} className="why-card">
@@ -666,6 +669,30 @@ function AgentReport({ data }) {
           )}
         </div>
       ))}
+
+      {Array.isArray(report.exceptions) && report.exceptions.length > 0 && (
+        <>
+          <h4 style={{ fontSize: 14, margin: "16px 0 8px" }}>Exceptions that could help</h4>
+          {report.exceptions.map((ex, i) => (
+            <div key={i} className="note-item">{ex}</div>
+          ))}
+        </>
+      )}
+
+      {Array.isArray(report.actionPlan) && report.actionPlan.length > 0 && (
+        <>
+          <h4 style={{ fontSize: 14, margin: "16px 0 8px" }}>Your action plan</h4>
+          {report.actionPlan.map((a, i) => (
+            <div key={i} className="opt-card">
+              <div className="opt-icon"><OptIcon name={i === 0 ? "check" : "doc"} /></div>
+              <div>
+                <div className="opt-title">{a.step}</div>
+                <div className="opt-desc">{a.detail}{a.who ? ` · Who: ${a.who}` : ""}</div>
+              </div>
+            </div>
+          ))}
+        </>
+      )}
 
       {sources.length > 0 && (
         <>
@@ -709,8 +736,8 @@ function EligibilityTab() {
     && form.propType && form.gender && form.age && form.value && form.area
     && form.municipalStatus && form.residency && form.buyingCapacity;
 
-  // Probe the local agent backend once. When it's up, the LLM research agent
-  // answers eligibility (live India Kanoon / India Code lookups); otherwise we
+  // Probe the agent backend once. When it's up, the contextual-RAG agent answers
+  // eligibility (retrieval over the bundled legal database + Gemini); otherwise we
   // fall back to the offline deterministic rule engine.
   useEffect(() => {
     let alive = true;
@@ -725,14 +752,13 @@ function EligibilityTab() {
     setResult(null); setAgentData(null); setAgentError("");
     setLoading(true);
 
-    // Preferred path: the LLM research agent (backend live).
+    // Preferred path: the contextual-RAG agent (backend live).
     if (agentInfo && agentInfo.available) {
       try {
-        const ruleReport = buildLocalEligibilityReport(form); // deterministic cross-check, sent as ground truth
         const r = await fetch("/api/eligibility", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ form, ruleReport: { top: ruleReport.top, risks: ruleReport.risks } }),
+          body: JSON.stringify({ form }),
         });
         const data = await r.json();
         if (!r.ok || data.error) throw new Error(data.error || `Agent error ${r.status}`);

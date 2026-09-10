@@ -19,8 +19,8 @@ export default defineConfig([
     },
   },
   {
-    // Node-runtime code (local backend + Vercel serverless functions).
-    files: ['server/**/*.js', 'api/**/*.js'],
+    // Node-runtime code (local backend, Vercel serverless functions, shared agent lib, scripts).
+    files: ['server/**/*.js', 'api/**/*.js', 'lib/**/*.js', 'scripts/**/*.{js,mjs}'],
     languageOptions: { globals: globals.node },
   },
 ])
