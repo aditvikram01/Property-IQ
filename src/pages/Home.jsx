@@ -12,7 +12,7 @@
 // the buttons are inert but everything else works.
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import indiaMap from './data/indiaMap.js';
+import indiaMap from '../data/indiaMap.js';
 
 /* ---------------------------------------------------------------- tokens */
 
@@ -91,10 +91,10 @@ const DATA = {
     portal: 'igrpunjab.gov.in', unit: 'Kanal, Marla, Acre',
     lang: 'ਪੰਜਾਬੀ · English', langFont: GUR, sro: '82 offices',
     verdict: 'Punjab carries the highest urban rate of the four states covered.',
-    body: 'The cost is the main thing to plan for, and one citation is worth checking in any draft you are handed. The eligibility report sets out both against their source.',
+    body: 'The cost is the main thing to plan for, and one citation is worth checking in any draft you are handed — the rent act most drafts name is not the one in force. The eligibility report sets out both against their source.',
     checks: [
       'An urban sale deed is charged at 7% for a male buyer and 5% for a female buyer, with a 1% Social Infrastructure Cess in some areas; rural rates are 5% and 3%.',
-      'Tenancy is governed by the Punjab Rent Act 1995. Agreements citing the repealed 1949 Act rest on law no longer in force, and we flag that clause.',
+      'Tenancy runs under the East Punjab Urban Rent Restriction Act 1949, which is in force. The Punjab Rent Act 1995 was passed but never notified, and we flag a draft that cites it.',
       'Ownership is proved by the Jamabandi or Fard record, available on igrpunjab.gov.in.',
     ],
   },
@@ -186,7 +186,7 @@ export default function Home({ onNavigate }) {
       if (svg) {
         ORDER.forEach((id) => {
           const el = svg.querySelector(`[data-sid="${id}"]`);
-          let b = null;
+          let b;
           try { b = el && el.getBBox ? el.getBBox() : null; } catch { b = null; }
           if (b && b.width > 0 && b.height > 0) found[id] = { x: b.x + b.width / 2, y: b.y + b.height / 2 };
           else ok = false;
