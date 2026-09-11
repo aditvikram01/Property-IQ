@@ -345,11 +345,11 @@ details.acc[open] > summary::before { transform: rotate(90deg); }
 
 .rl-doc {
   white-space: pre-wrap; word-break: break-word;
-  font-size: 12.5px; line-height: 1.85; color: var(--fg);
-  padding: 16px; max-height: 460px; overflow-y: auto;
+  font-size: 13.5px; line-height: 1.9; color: var(--fg);
+  padding: 18px 20px;
   border-right: 1px solid var(--border); background: var(--bg);
 }
-@media (max-width: 720px) { .rl-doc { border-right: none; border-bottom: 1px solid var(--border); max-height: 320px; } }
+@media (max-width: 720px) { .rl-doc { border-right: none; border-bottom: 1px solid var(--border); } }
 
 .rl-mark { border-radius: 3px; padding: 1px 1px; cursor: pointer; color: inherit; background: transparent; box-shadow: inset 0 -0.55em 0 var(--rl-tint); transition: box-shadow 0.15s, outline 0.15s; outline: 2px solid transparent; }
 .rl-mark:hover { box-shadow: inset 0 -0.7em 0 var(--rl-tint); }
@@ -358,7 +358,8 @@ details.acc[open] > summary::before { transform: rotate(90deg); }
 .rl-medium { --rl-tint: #fdecc8; --rl-edge: var(--warning); }
 .rl-low { --rl-tint: #dcfce7; --rl-edge: var(--success); }
 
-.rl-side { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.rl-side { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; align-self: start; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto; }
+@media (max-width: 720px) { .rl-side { position: static; max-height: none; overflow: visible; } }
 .rl-count { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: var(--fg-secondary); }
 .rl-list { display: flex; flex-direction: column; gap: 5px; }
 .rl-chip { display: flex; align-items: center; gap: 8px; text-align: left; width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 9px; padding: 8px 10px; cursor: pointer; font: inherit; font-size: 12px; font-weight: 600; color: var(--fg); transition: all 0.12s; }

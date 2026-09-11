@@ -1057,7 +1057,7 @@ function RedlineView({ data, contractText }) {
   if (cursor < (contractText || "").length) segs.push({ t: contractText.slice(cursor), i: null });
 
   return (
-    <div className="card report" style={{ padding: 0, overflow: "hidden" }}>
+    <div className="card report" style={{ padding: 0 }}>
       <div className="rl-head">
         <div className="rl-head-title">{"⚖️"} Risky clauses</div>
         <div className="rl-head-pills">
