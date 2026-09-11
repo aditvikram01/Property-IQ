@@ -10,11 +10,9 @@
 import http from "node:http";
 import { runRagEligibility } from "../lib/ragAgent.js";
 import { runDecode } from "../lib/decodeAgent.js";
+import { providerStatus } from "../lib/llm.js";
 
 const PORT = Number(process.env.PORT) || 8787;
-const GEMINI_KEYS = (process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || process.env.legal || "")
-  .split(",").map((k) => k.trim()).filter(Boolean);
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
 function send(res, code, obj) {
   res.writeHead(code, {
@@ -39,7 +37,15 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${PORT}`);
 
   if (url.pathname === "/api/health") {
-    return send(res, 200, { ok: true, gemini: GEMINI_KEYS.length > 0, geminiKeys: GEMINI_KEYS.length, model: GEMINI_MODEL });
+    const s = providerStatus();
+    return send(res, 200, {
+      ok: true,
+      indiaKanoon: Boolean(process.env.INDIAN_KANOON_TOKEN),
+      provider: s.provider,
+      openai: s.openai, openaiKeys: s.openaiKeys,
+      gemini: s.gemini, geminiKeys: s.geminiKeys,
+      model: s.model,
+    });
   }
 
   if (url.pathname === "/api/eligibility" && req.method === "POST") {
@@ -69,6 +75,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
+  const s = providerStatus();
   console.log(`PropertyIQ RAG eligibility backend on http://localhost:${PORT}`);
-  console.log(`  Gemini keys: ${GEMINI_KEYS.length} (${GEMINI_MODEL})`);
+  console.log(`  AI provider: ${s.provider || "NONE — set OPENAI_API_KEYS/legal_1 or GEMINI_API_KEYS/legal"}${s.provider ? ` (${s.model}); openai keys: ${s.openaiKeys}, gemini keys: ${s.geminiKeys}` : ""}`);
 });
