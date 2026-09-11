@@ -20,7 +20,7 @@ import { RAG_DB } from "../lib/ragDatabase.js";
 
 const DB_MODULE_PATH = fileURLToPath(new URL("../lib/ragDatabase.js", import.meta.url));
 const IK_TOKEN = process.env.INDIAN_KANOON_TOKEN || "";
-const GEMINI_KEYS = (process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || "").split(",").map((k) => k.trim()).filter(Boolean);
+const GEMINI_KEYS = (process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || process.env.legal || "").split(",").map((k) => k.trim()).filter(Boolean);
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const IK_BASE = "https://api.indiankanoon.org";
 

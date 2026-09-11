@@ -11,7 +11,7 @@ import http from "node:http";
 import { runRagEligibility } from "../lib/ragAgent.js";
 
 const PORT = Number(process.env.PORT) || 8787;
-const GEMINI_KEYS = (process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || "")
+const GEMINI_KEYS = (process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || process.env.legal || "")
   .split(",").map((k) => k.trim()).filter(Boolean);
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
