@@ -1,8 +1,8 @@
 // Vercel serverless function — POST /api/eligibility
 // Contextual-RAG eligibility. All logic lives in lib/ragAgent.js (shared with
-// server/index.js). Required Vercel env: an OpenAI key — OPENAI_API_KEYS / legal_1;
-// optional OPENAI_MODEL (default gpt-4o-mini). India Kanoon token is NOT needed
-// here — retrieval is over the bundled RAG database.
+// server/index.js). Required Vercel env: an AI key — Gemini (GEMINI_API_KEYS /
+// Gemini_API_Key_2), Groq (groq_1), or OpenAI; tried in that order (see lib/llm.js).
+// India Kanoon token is NOT needed here — retrieval is over the bundled RAG database.
 
 import { runRagEligibility } from "../lib/ragAgent.js";
 
