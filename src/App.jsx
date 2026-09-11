@@ -1043,7 +1043,6 @@ function RedlineView({ data, contractText }) {
     return (
       <div className="card ai-output">
         <p style={{ fontSize: 13 }}>{data.summary || "No specific risks were identified in this contract."}</p>
-        <Disclaimer />
       </div>
     );
   }
@@ -1060,7 +1059,7 @@ function RedlineView({ data, contractText }) {
   return (
     <div className="card report" style={{ padding: 0, overflow: "hidden" }}>
       <div className="rl-head">
-        <div className="rl-head-title">{"⚖️"} Contract redline</div>
+        <div className="rl-head-title">{"⚖️"} Risky clauses</div>
         <div className="rl-head-pills">
           {["high", "medium", "low"].map((s) => counts[s]
             ? <span key={s} className={`rl-pill rl-pill-${s}`}>{counts[s]} {s}</span>
@@ -1091,7 +1090,6 @@ function RedlineView({ data, contractText }) {
           <RedlineDetail f={findings[active]} />
         </div>
       </div>
-      <div style={{ padding: "0 16px 12px" }}><Disclaimer /></div>
     </div>
   );
 }
@@ -1212,7 +1210,7 @@ function UnderstandTab() {
 
       {riskOut && (
         <>
-          <div className="doc-group-label">Redline · risky clauses highlighted · {language}</div>
+          <div className="doc-group-label">Risky clauses · {language}</div>
           <RedlineView data={riskOut} contractText={text} />
         </>
       )}
