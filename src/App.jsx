@@ -103,7 +103,6 @@ const VERDICT_TAG = {
   LOW: "Looks workable",
 };
 const INDIA_CODE_URL = "https://www.indiacode.nic.in/";
-const LEGAL_AID_URL = "https://nalsa.gov.in/lsams/";
 const DEFAULT_OPTIONS = [
   { icon: "doc", title: "Order a 15-year Encumbrance Certificate", desc: "Confirms the property is free of loans and legal claims before you pay anything." },
   { icon: "check", title: "Verify the circle / guidance value", desc: "Stamp duty is charged on the higher of price and government value — check the state portal first." },
@@ -375,59 +374,9 @@ function OptIcon({ name }) {
 
 function LocalReport({ report, form }) {
   const { verdict } = report;
-  const [saved, setSaved] = useState(false);
   const lvlClass = verdict.level === "CRITICAL" ? "verdict-critical" : verdict.level === "HIGH" ? "verdict-high" : verdict.level === "MEDIUM" ? "verdict-medium" : "verdict-low";
   const isCritical = verdict.level === "CRITICAL";
   const q = report.stampQuote;
-
-  const exportBrief = () => {
-    const lines = [
-      "PropertyIQ — Eligibility brief",
-      `${form.buyerState} -> ${form.propertyState}  |  ${form.txnType}  |  ${form.propType}`,
-      form.pincode ? `Property pincode: ${form.pincode}` : "",
-      "",
-      `VERDICT: ${verdict.tag}`,
-      verdict.headline,
-      "",
-    ];
-    if (report.blockers.length) {
-      lines.push("WHY:");
-      report.blockers.forEach((b) => lines.push(`- [${b.level}] ${b.title}\n  ${b.body}\n  Source: ${b.source}`));
-      lines.push("");
-    }
-    lines.push("OPTIONS:");
-    report.options.forEach((o) => lines.push(`- ${o.title}: ${o.desc}`));
-    lines.push("");
-    if (q) {
-      lines.push("ESTIMATED COST (if it proceeds):");
-      lines.push(`- Stamp ₹${q.stamp.toLocaleString("en-IN")} · Registration ₹${q.registration.toLocaleString("en-IN")} · Cess ₹${q.cess.toLocaleString("en-IN")} · Total ₹${q.total.toLocaleString("en-IN")} (~${q.totalRate.toFixed(1)}%)`);
-      lines.push(`- Levied by ${form.propertyState} (Indian Stamp Act, Section 19).`);
-      lines.push("");
-    }
-    lines.push("DOCUMENTS TO OBTAIN:");
-    report.docPlan.obtain.forEach((d) => lines.push(`- ${d.name}${d.where ? ` (from ${d.where})` : ""}`));
-    lines.push("YOU ALREADY HAVE:");
-    report.docPlan.have.forEach((d) => lines.push(`- ${d.name}`));
-    lines.push("");
-    lines.push("Legal information, not legal advice. Consult a registered advocate or your nearest DLSA.");
-    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `propertyiq-brief-${form.propertyState.replace(/\s+/g, "-").toLowerCase()}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const saveCase = () => {
-    try {
-      const arr = JSON.parse(localStorage.getItem("propertyiq_saved_cases") || "[]");
-      arr.push({ at: new Date().toISOString(), route: `${form.buyerState} -> ${form.propertyState}`, txn: form.txnType, verdict: verdict.tag, headline: verdict.headline });
-      localStorage.setItem("propertyiq_saved_cases", JSON.stringify(arr));
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
-    } catch { /* storage unavailable */ }
-  };
 
   return (
     <div className="report">
@@ -500,17 +449,17 @@ function LocalReport({ report, form }) {
       <div className="report-h">What you will need</div>
       {report.docPlan.obtain.length > 0 && (
         <>
-          <div className="doc-group-label">You obtain</div>
+          <div className="doc-group-label">You will need to obtain</div>
           {report.docPlan.obtain.map((d, i) => (
-            <label key={i} className="doc-item"><input type="checkbox" /><span>{d.name}{d.where && <span className="where"> — from {d.where}</span>}</span></label>
+            <div key={i} className="doc-line"><span className="doc-b">•</span><span>{d.name}{d.where && <span className="where"> — you can get this from {d.where}.</span>}</span></div>
           ))}
         </>
       )}
       {report.docPlan.have.length > 0 && (
         <>
-          <div className="doc-group-label">You already have</div>
+          <div className="doc-group-label">You most likely already have</div>
           {report.docPlan.have.map((d, i) => (
-            <label key={i} className="doc-item"><input type="checkbox" /><span>{d.name}</span></label>
+            <div key={i} className="doc-line"><span className="doc-b">•</span><span>{d.name}</span></div>
           ))}
         </>
       )}
@@ -529,13 +478,7 @@ function LocalReport({ report, form }) {
         </details>
       )}
 
-      <div className="report-actions">
-        <button className="btn btn-outline btn-sm" onClick={exportBrief}><OptIcon name="download" /> Export for advocate</button>
-        <button className="btn btn-outline btn-sm" onClick={saveCase}>{saved ? <>Saved {"✓"}</> : <><OptIcon name="save" /> Save case</>}</button>
-        <a className="btn btn-outline btn-sm" href={LEGAL_AID_URL} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}><OptIcon name="pin" /> Find legal aid</a>
-      </div>
-
-      <div className="report-note">Generated from the property-law database. This is legal information, not legal advice — verify current circulars with the relevant Sub-Registrar or a registered advocate, or your nearest DLSA.</div>
+      <div className="report-note">Generated from the property-law database. This is legal information, not legal advice — please verify the current circulars with the relevant Sub-Registrar or a registered advocate, or your nearest District Legal Services Authority.</div>
     </div>
   );
 }
@@ -573,11 +516,6 @@ function HomeTab({ setTab }) {
           <div className="hero-cta-row">
             <button className="btn btn-primary hero-cta" onClick={() => setTab("eligibility")}>Check if you can buy {"→"}</button>
             <button className="btn btn-outline hero-cta2" onClick={() => setTab("understand")}>Decode a contract</button>
-          </div>
-          <div className="hero-stats">
-            <div><b>4</b><span>states covered</span></div>
-            <div><b>Real</b><span>statutes cited</span></div>
-            <div><b>Daily</b><span>law updates</span></div>
           </div>
         </div>
       </section>
@@ -654,71 +592,83 @@ function AgentReport({ data }) {
   const report = data.report || {};
   const findings = Array.isArray(report.findings) ? report.findings : [];
   const sources = Array.isArray(report.sources) ? report.sources : [];
+  const exceptions = Array.isArray(report.exceptions) ? report.exceptions : [];
+  const actionPlan = Array.isArray(report.actionPlan) ? report.actionPlan : [];
   const sevOrder = { critical: 0, high: 1, medium: 2, low: 3 };
   const sorted = [...findings].sort((a, b) => (sevOrder[a.severity] ?? 9) - (sevOrder[b.severity] ?? 9));
   return (
-    <div className="card report">
-      <h3 style={{ fontSize: 18, fontWeight: 900, marginBottom: 8 }}>Eligibility Assessment</h3>
-      <div style={{ marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-        <span className={`badge ${verdictBadgeClass(report.verdict)}`}>Status: {verdictStatus(report.verdict)}</span>
-        {report.confidence && <span className="badge badge-info">Confidence: {String(report.confidence).replace(/^./, (c) => c.toUpperCase())}</span>}
-        {report.asOf && <span className="report-note" style={{ margin: 0 }}>As of {report.asOf}</span>}
-      </div>
-      {report.summary && <div className="verdict-headline" style={{ fontSize: 16, marginBottom: 8 }}>{report.summary}</div>}
-      {report.confidenceReason && <div className="report-note" style={{ marginBottom: 12 }}>{report.confidenceReason}</div>}
-
-      {sorted.map((fd, i) => (
-        <div key={i} className="why-card">
-          <div style={{ marginBottom: 4 }}>
-            <span className={`sev sev-${fd.severity}`}>{String(fd.severity || "").toUpperCase()}</span>
-            <span className="why-title">{fd.title}</span>
-          </div>
-          <div className="why-body">{fd.explanation}</div>
-          {fd.source && (
-            <div style={{ marginTop: 6 }}>
-              <a href={fd.source} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: "var(--accent)", fontWeight: 600 }}>Read the official source →</a>
-            </div>
-          )}
+    <div className="card report rpt">
+      <div className="rpt-head">
+        <div className="rpt-badges">
+          <span className={`badge ${verdictBadgeClass(report.verdict)}`}>{verdictStatus(report.verdict)}</span>
+          {report.confidence && <span className="badge badge-info">Confidence: {String(report.confidence).replace(/^./, (c) => c.toUpperCase())}</span>}
         </div>
-      ))}
+        {report.asOf && <span className="rpt-asof">Assessed as of {report.asOf}</span>}
+      </div>
 
-      {Array.isArray(report.exceptions) && report.exceptions.length > 0 && (
-        <>
-          <h4 style={{ fontSize: 14, margin: "16px 0 8px" }}>Exceptions that could help</h4>
-          {report.exceptions.map((ex, i) => (
-            <div key={i} className="note-item">{ex}</div>
+      {report.summary && <p className="rpt-summary">{report.summary}</p>}
+      {report.confidenceReason && <p className="rpt-conf">{report.confidenceReason}</p>}
+
+      {sorted.length > 0 && (
+        <div className="rpt-section">
+          <div className="rpt-h">What this means for you</div>
+          {sorted.map((fd, i) => (
+            <details key={i} className="rpt-item" open={i === 0}>
+              <summary>
+                <span className={`sev sev-${fd.severity}`}>{String(fd.severity || "").toUpperCase()}</span>
+                <span className="rpt-item-title">{fd.title}</span>
+              </summary>
+              <div className="rpt-item-body">
+                <p>{fd.explanation}</p>
+                {fd.source && <a className="rpt-src" href={fd.source} target="_blank" rel="noreferrer">Read the official source →</a>}
+              </div>
+            </details>
           ))}
-        </>
+        </div>
       )}
 
-      {Array.isArray(report.actionPlan) && report.actionPlan.length > 0 && (
-        <>
-          <h4 style={{ fontSize: 14, margin: "16px 0 8px" }}>Your action plan</h4>
-          {report.actionPlan.map((a, i) => (
-            <div key={i} className="opt-card">
-              <div className="opt-icon"><OptIcon name={i === 0 ? "check" : "doc"} /></div>
-              <div>
-                <div className="opt-title">{a.step}</div>
-                <div className="opt-desc">{a.detail}{a.who ? ` · Who: ${a.who}` : ""}</div>
+      {actionPlan.length > 0 && (
+        <div className="rpt-section">
+          <div className="rpt-h">Your next steps</div>
+          {actionPlan.map((a, i) => (
+            <details key={i} className="rpt-item">
+              <summary>
+                <span className="rpt-step-n">{i + 1}</span>
+                <span className="rpt-item-title">{a.step}</span>
+              </summary>
+              <div className="rpt-item-body">
+                <p>{a.detail}</p>
+                {a.who && <p className="rpt-who">Who to approach: {a.who}</p>}
               </div>
-            </div>
+            </details>
           ))}
-        </>
+        </div>
+      )}
+
+      {exceptions.length > 0 && (
+        <div className="rpt-section">
+          <details className="rpt-item">
+            <summary><span className="rpt-item-title">There are {exceptions.length} exception{exceptions.length !== 1 ? "s" : ""} that could change this answer.</span></summary>
+            <div className="rpt-item-body">
+              {exceptions.map((ex, i) => <p key={i}>{ex}</p>)}
+            </div>
+          </details>
+        </div>
       )}
 
       {sources.length > 0 && (
-        <>
-          <h4 style={{ fontSize: 14, margin: "16px 0 8px" }}>Sources</h4>
-          {sources.map((s, i) => (
-            <div key={i} style={{ fontSize: 12, marginBottom: 4 }}>
-              {"🔗 "}<a href={s.url} target="_blank" rel="noreferrer" style={{ color: "var(--accent)", fontWeight: 600 }}>{s.title || s.url}</a>
-            </div>
-          ))}
-        </>
+        <div className="rpt-section">
+          <div className="rpt-h">Sources</div>
+          <div className="rpt-sources">
+            {sources.map((s, i) => (
+              <a key={i} className="rpt-source" href={s.url} target="_blank" rel="noreferrer">{"🔗 "}{s.title || s.url}</a>
+            ))}
+          </div>
+        </div>
       )}
 
-      <div className="alert alert-info" style={{ marginTop: 12, fontSize: 12, fontWeight: 500 }}>
-        This is general information to help you understand your situation — not legal advice. Please confirm with a registered advocate or your nearest DLSA before acting.
+      <div className="rpt-disclaimer">
+        This is general information to help you understand your situation. It is not legal advice, so please confirm the details with a registered advocate or your nearest District Legal Services Authority before you act.
       </div>
     </div>
   );
@@ -838,15 +788,14 @@ function EligibilityTab() {
   };
 
   return (
-    <div className="page">
+    <div className="page page-wide">
       <h2 className="section-title">{"🔍"} Can I Buy This Property?</h2>
       <p className="section-desc">Answer a few questions to get a complete risk report for your property transaction.</p>
 
-      {form.buyerState && form.propertyState && form.buyerState !== form.propertyState && (
-        <div className="alert alert-info" style={{ marginBottom: 12 }}>
-          Transaction: {form.buyerState} {"→"} {form.propertyState}.
-          {STATE_LANGUAGES[form.propertyState] && ` Documents must be in ${STATE_LANGUAGES[form.propertyState].registration.join(" or ")}.`}
-        </div>
+      {form.buyerState && form.propertyState && form.buyerState !== form.propertyState && STATE_LANGUAGES[form.propertyState] && (
+        <p className="cross-note">
+          Your documents might need to be in {STATE_LANGUAGES[form.propertyState].registration.join(" or ")}.
+        </p>
       )}
 
       <StateMap state={form.propertyState} />
@@ -1746,7 +1695,7 @@ export default function App() {
       <footer className="footer">
         <strong>{"⚖️"} PropertyIQ</strong> {"—"} Know Before You Buy<br />
         This tool provides legal information, not legal advice. Consult a registered advocate or your nearest DLSA.<br />
-        Laws as of June 2026. Built for Code of Law Challenge 2026 by Rhett.legal.<br />        <span style={{ color: "#999" }}>HP {"•"} Maharashtra {"•"} Karnataka {"•"} Punjab</span>
+        <span style={{ color: "#999" }}>HP {"•"} Maharashtra {"•"} Karnataka {"•"} Punjab</span>
       </footer>
       <Analytics />
     </div>

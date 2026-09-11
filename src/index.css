@@ -300,6 +300,9 @@ details.law[open] > summary::before { transform: rotate(90deg); }
 .doc-item { display: flex; gap: 9px; align-items: baseline; font-size: 13px; padding: 5px 0; cursor: pointer; }
 .doc-item input { accent-color: var(--accent); width: 15px; height: 15px; flex-shrink: 0; }
 .doc-item .where { color: var(--fg-secondary); font-weight: 400; }
+.doc-line { display: flex; gap: 10px; align-items: baseline; font-size: 14px; padding: 6px 0; line-height: 1.55; }
+.doc-line .doc-b { color: var(--accent); font-weight: 800; flex-shrink: 0; }
+.doc-line .where { color: var(--fg-secondary); font-weight: 400; }
 .doc-hidden { display: flex; gap: 7px; align-items: flex-start; font-size: 12px; color: var(--fg-secondary); font-style: italic; margin-top: 12px; }
 .doc-hidden svg { flex-shrink: 0; margin-top: 2px; }
 
@@ -397,6 +400,45 @@ details.acc[open] > summary::before { transform: rotate(90deg); }
 .sm-legend-dot, .sm-legend-sel { width: 11px; height: 11px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
 .sm-legend-dot { background: #f1d9ca; border: 1px solid #e2c4b3; }
 .sm-legend-sel { background: var(--success); }
+
+/* Wider page for the eligibility experience */
+.page-wide { max-width: 1000px; }
+
+/* Subtle cross-state language note */
+.cross-note { font-size: 12px; color: var(--fg-secondary); margin: -2px 0 12px; padding-left: 10px; border-left: 2px solid var(--border); line-height: 1.5; }
+
+/* ===== Agent report v2 (full-width, collapsible, readable) ===== */
+.rpt { padding: 24px 26px; }
+@media (max-width: 600px) { .rpt { padding: 16px; } }
+.rpt-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.rpt-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+.rpt-head .badge { font-size: 12px; padding: 4px 12px; }
+.rpt-asof { font-size: 12px; color: var(--fg-secondary); }
+.rpt-summary { font-family: 'Source Serif 4', Georgia, serif; font-size: 23px; line-height: 1.42; font-weight: 800; margin: 2px 0 10px; }
+@media (max-width: 600px) { .rpt-summary { font-size: 19px; } }
+.rpt-conf { font-size: 13.5px; color: var(--fg-secondary); line-height: 1.65; margin-bottom: 6px; }
+.rpt-section { margin-top: 24px; }
+.rpt-h { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.7px; color: var(--fg-secondary); margin-bottom: 11px; }
+.rpt-item { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; background: var(--card); overflow: hidden; transition: border-color 0.15s; }
+.rpt-item:hover { border-color: var(--fg-secondary); }
+.rpt-item[open] { border-color: var(--border); }
+.rpt-item > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 16px 18px; }
+.rpt-item > summary::-webkit-details-marker { display: none; }
+.rpt-item > summary::after { content: "▸"; margin-left: auto; font-size: 14px; color: var(--fg-secondary); transition: transform 0.18s; flex-shrink: 0; }
+.rpt-item[open] > summary::after { transform: rotate(90deg); }
+.rpt-item[open] > summary { border-bottom: 1px solid var(--border); }
+.rpt-item-title { font-size: 16px; font-weight: 700; line-height: 1.5; }
+.rpt-item-body { padding: 15px 18px 17px; }
+.rpt-item-body p { font-size: 15px; line-height: 1.72; color: var(--fg); margin: 0 0 10px; }
+.rpt-item-body p:last-child { margin-bottom: 0; }
+.rpt-who { color: var(--fg-secondary); font-weight: 600; font-size: 14px !important; }
+.rpt-src { display: inline-block; margin-top: 4px; font-size: 13.5px; font-weight: 700; color: var(--accent); text-decoration: none; }
+.rpt-src:hover { text-decoration: underline; }
+.rpt-step-n { flex-shrink: 0; width: 27px; height: 27px; border-radius: 50%; background: var(--accent-light); color: var(--accent); font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+.rpt-sources { display: flex; flex-direction: column; gap: 8px; }
+.rpt-source { font-size: 14.5px; color: var(--accent); font-weight: 600; text-decoration: none; }
+.rpt-source:hover { text-decoration: underline; }
+.rpt-disclaimer { margin-top: 24px; padding: 13px 16px; background: var(--info-light); border: 1px solid #bfdbfe; border-radius: 10px; font-size: 13.5px; line-height: 1.65; color: #1e40af; }
 
 /* ===== Eligibility wizard (stepped form) ===== */
 .wizard { padding: 0; overflow: hidden; }
