@@ -9,6 +9,7 @@
 
 import http from "node:http";
 import { runRagEligibility } from "../lib/ragAgent.js";
+import { runDecode } from "../lib/decodeAgent.js";
 
 const PORT = Number(process.env.PORT) || 8787;
 const GEMINI_KEYS = (process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || process.env.legal || "")
@@ -49,6 +50,17 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, out);
     } catch (e) {
       console.error("[eligibility] error:", e);
+      return send(res, 500, { error: String(e.message || e) });
+    }
+  }
+
+  if (url.pathname === "/api/decode" && req.method === "POST") {
+    try {
+      const body = await readBody(req);
+      const out = await runDecode({ text: body.text, language: body.language, op: body.op });
+      return send(res, 200, out);
+    } catch (e) {
+      console.error("[decode] error:", e);
       return send(res, 500, { error: String(e.message || e) });
     }
   }

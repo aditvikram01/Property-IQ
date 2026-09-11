@@ -10,11 +10,7 @@ import {
 import { PROPERTY_LAW_DB } from "./data/propertyLawDatabase";
 import INDIA_MAP from "./data/indiaMap.js";
 import { parseDocument } from "./lib/parseDocument";
-import { callGemini, callGeminiJSON, GEMINI_KEY_STORAGE, DEFAULT_GEMINI_KEY } from "./lib/gemini";
-import {
-  OUTPUT_LANGUAGES, scriptFor, groundingForText,
-  buildExplainPrompt, buildRiskPrompt, RISK_SCHEMA, UNDERSTAND_SYSTEM,
-} from "./lib/understand";
+import { OUTPUT_LANGUAGES } from "./lib/understand";
 
 const TABS = [
   { id: "home", label: "Home", icon: "⚖️" },
@@ -601,13 +597,11 @@ function AgentReport({ data }) {
       <div className="rpt-head">
         <div className="rpt-badges">
           <span className={`badge ${verdictBadgeClass(report.verdict)}`}>{verdictStatus(report.verdict)}</span>
-          {report.confidence && <span className="badge badge-info">Confidence: {String(report.confidence).replace(/^./, (c) => c.toUpperCase())}</span>}
         </div>
         {report.asOf && <span className="rpt-asof">Assessed as of {report.asOf}</span>}
       </div>
 
       {report.summary && <p className="rpt-summary">{report.summary}</p>}
-      {report.confidenceReason && <p className="rpt-conf">{report.confidenceReason}</p>}
 
       {sorted.length > 0 && (
         <div className="rpt-section">
@@ -723,7 +717,7 @@ function StateMap({ state }) {
 function EligibilityTab() {
   const [form, setForm] = useState({
     buyerState: "", propertyState: "", pincode: "", txnType: "", propType: "",
-    gender: "", age: "", buyerType: "Indian Resident", value: "", area: "",
+    gender: "", age: "", buyerType: "Indian Resident", value: "",
     municipalStatus: "", residency: "", buyingCapacity: "",
     sellerRelation: "", tribalStatus: "", leaseMonths: "",
   });
@@ -733,8 +727,7 @@ function EligibilityTab() {
   const [agentData, setAgentData] = useState(null);    // { report, trace } from the agent
   const [agentError, setAgentError] = useState("");
   const [step, setStep] = useState(0);
-  const f = (k, v) => setForm((p) => ({ ...p, [k]: v, ...(k === "propertyState" ? { area: "", pincode: "" } : {}) }));
-  const areas = form.propertyState ? AREA_CATEGORIES[form.propertyState] || [] : [];
+  const f = (k, v) => setForm((p) => ({ ...p, [k]: v, ...(k === "propertyState" ? { pincode: "" } : {}) }));
   const PINCODES = {
     "Himachal Pradesh": [{ v: "171001", l: "171001 — Urban" }, { v: "175001", l: "175001 — Rural" }],
     Maharashtra: [{ v: "400001", l: "400001 — Urban" }, { v: "413001", l: "413001 — Rural" }],
@@ -742,7 +735,7 @@ function EligibilityTab() {
     Punjab: [{ v: "141001", l: "141001 — Urban" }, { v: "141801", l: "141801 — Rural" }],
   };
   const canSubmit = form.buyerState && form.propertyState && form.pincode.length === 6 && form.txnType
-    && form.propType && form.gender && form.age && form.value && form.area
+    && form.propType && form.gender && form.age && form.value
     && form.municipalStatus && form.residency && form.buyingCapacity;
 
   // Probe the agent backend once. When it's up, the contextual-RAG agent answers
@@ -802,7 +795,7 @@ function EligibilityTab() {
 
       {(() => {
         const steps = [
-          { label: "Location", req: ["buyerState", "propertyState", "pincode", "area"] },
+          { label: "Location", req: ["buyerState", "propertyState", "pincode"] },
           { label: "The deal", req: ["txnType", "propType", "municipalStatus"] },
           { label: "About you", req: ["gender", "age", "value", "residency", "buyingCapacity"] },
         ];
@@ -832,9 +825,6 @@ function EligibilityTab() {
                       <option value="">{form.propertyState ? "Select pincode..." : "Select property state first"}</option>
                       {(PINCODES[form.propertyState] || []).map((p) => <option key={p.v} value={p.v}>{p.l}</option>)}
                     </select></div>
-                  <div><label className="form-label">Area Category</label>
-                    <select value={form.area} onChange={(e) => f("area", e.target.value)} className="form-select">
-                      <option value="">Select...</option>{areas.map((a) => <option key={a}>{a}</option>)}</select></div>
                 </div>
               )}
 
@@ -842,7 +832,7 @@ function EligibilityTab() {
                 <div className="form-grid">
                   <div><label className="form-label">Transaction Type</label>
                     <select value={form.txnType} onChange={(e) => f("txnType", e.target.value)} className="form-select">
-                      <option value="">Select...</option>{TRANSACTION_TYPES.map((t) => <option key={t}>{t}</option>)}</select></div>
+                      <option value="">Select...</option>{TRANSACTION_TYPES.map((t) => <option key={t} value={t}>{t.includes("Sale") ? "Purchase" : "Take on rent / lease"}</option>)}</select></div>
                   <div><label className="form-label">Property Type (Agricultural / Non-Agricultural)</label>
                     <select value={form.propType} onChange={(e) => f("propType", e.target.value)} className="form-select">
                       <option value="">Select...</option>{PROPERTY_TYPES.map((t) => <option key={t}>{t}</option>)}</select></div>
@@ -1106,7 +1096,7 @@ function RedlineView({ data, contractText }) {
   );
 }
 
-function UnderstandTab({ geminiKey, setGeminiKey }) {
+function UnderstandTab() {
   const [language, setLanguage] = useState("Hindi");
   const [text, setText] = useState("");
   const [fileName, setFileName] = useState("");
@@ -1116,7 +1106,6 @@ function UnderstandTab({ geminiKey, setGeminiKey }) {
   const [riskOut, setRiskOut] = useState(null);
   const [busy, setBusy] = useState("");          // "" | "explain" | "risk"
   const [error, setError] = useState("");
-  const [keyInput, setKeyInput] = useState("");
 
   // Parsing is client-side (Scribe) and needs no key. The doc is read in English;
   // the chosen OUTPUT language is applied later by Gemini, not here.
@@ -1138,28 +1127,19 @@ function UnderstandTab({ geminiKey, setGeminiKey }) {
 
   const run = async (op) => {
     setError("");
-    if (!geminiKey) return;
     if (text.trim().length < 30) { setError("Add a contract first — upload a PDF or paste at least a clause of text."); return; }
     setBusy(op);
     setExplainOut(null); setRiskOut(null); // only the latest request's output is shown
     try {
-      const script = scriptFor(language);
-      const { grounding } = groundingForText(text);       // detect state/type + assemble citable sources
-      if (op === "explain") {
-        const out = await callGemini(geminiKey, {
-          system: UNDERSTAND_SYSTEM,
-          prompt: buildExplainPrompt({ text, language, script, grounding }),
-          temperature: 0.4,
-        });
-        setExplainOut(out);
-      } else {
-        const data = await callGeminiJSON(geminiKey, {
-          system: UNDERSTAND_SYSTEM,
-          prompt: buildRiskPrompt({ text, language, script, grounding }),
-          schema: RISK_SCHEMA,
-        });
-        setRiskOut(normalizeRisk(data));
-      }
+      const r = await fetch("/api/decode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, language, op }),
+      });
+      const data = await r.json();
+      if (!r.ok || data.error) throw new Error(data.error || `Decode error ${r.status}`);
+      if (op === "explain") setExplainOut(data.explain);
+      else setRiskOut(normalizeRisk(data.risk));
     } catch (err) {
       setError(friendlyError(err.message));
     } finally {
@@ -1174,32 +1154,6 @@ function UnderstandTab({ geminiKey, setGeminiKey }) {
       <h2 className="section-title">{"📄"} Decode My Contract</h2>
       <p className="section-desc">Upload a PDF (digital or scanned) or paste the text. Then get a plain-language explanation, or a risk analysis — written in your chosen language.</p>
 
-      {!geminiKey ? (
-        <div className="card" style={{ marginBottom: 12 }}>
-          <label className="form-label">Google Gemini API key</label>
-          <p style={{ fontSize: 12, color: "var(--fg-secondary)", margin: "0 0 8px" }}>
-            Stored only in this browser — never committed or sent anywhere except Google. Get a free key at{" "}
-            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">aistudio.google.com/apikey</a>. (Upload &amp; paste work without a key.)
-          </p>
-          <div style={{ display: "flex", gap: 8 }}>
-            <input type="password" autoComplete="off" value={keyInput}
-              onChange={(e) => setKeyInput(e.target.value)} placeholder="Paste your Gemini API key"
-              style={{ flex: 1, padding: "8px 10px", border: "1px solid var(--border)", borderRadius: 6, font: "inherit" }} />
-            <button className="btn btn-primary" disabled={!keyInput.trim()}
-              onClick={() => { const k = keyInput.trim(); localStorage.setItem(GEMINI_KEY_STORAGE, k); setGeminiKey(k); setKeyInput(""); }}>
-              Save key
-            </button>
-          </div>
-        </div>
-      ) : (
-        <p style={{ fontSize: 11, color: "var(--fg-secondary)", marginBottom: 8 }}>
-          {"✓"} Gemini key set ·{" "}
-          <button onClick={() => { localStorage.removeItem(GEMINI_KEY_STORAGE); setGeminiKey(""); }}
-            style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", padding: 0, font: "inherit", textDecoration: "underline" }}>
-            change / remove
-          </button>
-        </p>
-      )}
 
       <div className="card">
         <div className="form-grid" style={{ marginBottom: 12 }}>
@@ -1234,13 +1188,13 @@ function UnderstandTab({ geminiKey, setGeminiKey }) {
             {parsing ? <LoadingDots /> : `${text.length.toLocaleString()} characters`}{fileName && !parsing ? ` · ${fileName}` : ""}
           </span>
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => run("explain")} disabled={!geminiKey || !ready || !!busy}
-              className={`btn ${geminiKey && ready ? "btn-primary" : ""}`}>
-              {busy === "explain" ? <LoadingDots /> : geminiKey ? "Explain" : "Add Gemini key"}
+            <button onClick={() => run("explain")} disabled={!ready || !!busy}
+              className={`btn ${ready ? "btn-primary" : ""}`}>
+              {busy === "explain" ? <LoadingDots /> : "Explain"}
             </button>
-            <button onClick={() => run("risk")} disabled={!geminiKey || !ready || !!busy}
-              className={`btn ${geminiKey && ready ? "btn-danger" : ""}`}>
-              {busy === "risk" ? <LoadingDots /> : geminiKey ? "Analyze Risk" : "Add Gemini key"}
+            <button onClick={() => run("risk")} disabled={!ready || !!busy}
+              className={`btn ${ready ? "btn-danger" : ""}`}>
+              {busy === "risk" ? <LoadingDots /> : "Analyze Risk"}
             </button>
           </div>
         </div>
@@ -1672,8 +1626,6 @@ function JurisdictionGuide() {
 
 export default function App() {
   const [tab, setTab] = useState("home");
-  // Gemini key is supplied by the user and stored only in localStorage (no embedded key).
-  const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem(GEMINI_KEY_STORAGE) || DEFAULT_GEMINI_KEY);
 
   return (
     <div className="app">
@@ -1688,7 +1640,7 @@ export default function App() {
 
       {tab === "home" && <HomeTab setTab={setTab} />}
       {tab === "eligibility" && <EligibilityTab />}
-      {tab === "understand" && <UnderstandTab geminiKey={geminiKey} setGeminiKey={setGeminiKey} />}
+      {tab === "understand" && <UnderstandTab />}
       {tab === "stampduty" && <StampDutyTab />}
       {tab === "tools" && <ToolsTab />}
 
