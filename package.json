@@ -9,8 +9,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --test",
-    "refresh-db": "node scripts/refresh-db.mjs"
+    "test": "node --test"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

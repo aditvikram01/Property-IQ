@@ -194,12 +194,11 @@ export function buildRiskPrompt({ text, language, script, grounding }) {
 
 TASK: Analyze the following contract for legal risks and return ONLY a JSON object matching the required schema. Order findings by severity (high first). For each finding:
 - clauseRef: a short locator (clause number or a few words). May stay in the document's own language.
-- clauseQuote: a VERBATIM excerpt copied EXACTLY from the contract text below, 25 words maximum, in the document's ORIGINAL language and spelling (do not translate or paraphrase it — it will be matched against the source to highlight it). Prefer the single most-problematic sentence.
+- clauseQuote: a short excerpt from the contract, 25 words maximum. Quote the original text.
 - risk: a short title IN ${language} (${script}).
 - severity: one of "high", "medium", "low".
 - why: one or two plain sentences IN ${language} (${script}) explaining the risk.
-- suggestion: what to do about it, IN ${language} (${script}).
-- improvedClause: a concrete safer REWRITE of this clause that the user could propose instead, written in the SAME language as the contract (usually English) so it is directly usable in the document. If the clause needs no rewrite, use an empty string "".
+- suggestion: what to do or a safer alternative, IN ${language} (${script}).
 - legalBasis: the exact statute + section string copied from a SOURCE/GOVERNING LAW line in the LEGAL CONTEXT, ONLY if that source supports this finding. Otherwise legalBasis MUST be null. Never invent a citation.
 
 Also write a one-line "summary" IN ${language} (${script}) giving the overall risk picture.
@@ -231,11 +230,10 @@ export const RISK_SCHEMA = {
           severity: { type: "STRING", enum: ["high", "medium", "low"] },
           why: { type: "STRING" },
           suggestion: { type: "STRING" },
-          improvedClause: { type: "STRING" },
           legalBasis: { type: "STRING", nullable: true },
         },
-        required: ["clauseRef", "clauseQuote", "risk", "severity", "why", "suggestion", "improvedClause", "legalBasis"],
-        propertyOrdering: ["clauseRef", "clauseQuote", "risk", "severity", "why", "suggestion", "improvedClause", "legalBasis"],
+        required: ["clauseRef", "clauseQuote", "risk", "severity", "why", "suggestion", "legalBasis"],
+        propertyOrdering: ["clauseRef", "clauseQuote", "risk", "severity", "why", "suggestion", "legalBasis"],
       },
     },
   },

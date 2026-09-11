@@ -9,14 +9,16 @@ Shift-change report for the next Claude session. Read this first.
 - **Fixed it properly:** removed all hardcoded secrets, added an in-app "paste your Gemini key" box, added CI + a test suite (including a guard that blocks committing secrets), cleaned up lint/dead code, and **made the repo private**.
 - **Current state: green.** Lint clean · 19/19 tests pass · build OK · pushed (commit `773b26b`) with no secret-scanning block · deployed to Vercel with **zero keys in the bundle**.
 
-Live URL: **https://legal-ai-hackathon-gamma.vercel.app** (Vercel project `spunkymartians-projects/legal-ai-hackathon`).
+Live URL: **https://propertyiq.vercel.app** (Vercel project `propertyiq`).
+
+> **Migration note (2026-08-17):** The old Vercel project `spunkymartians-projects/legal-ai-hackathon` (URL `https://legal-ai-hackathon-gamma.vercel.app`) was retired. The app now lives at the new project/URL above. If the old URL is still reachable, delete the old project in the Vercel dashboard (Project → Settings → Delete Project).
 
 ---
 
 ## The product (5 nav tabs)
 - **Home** — branding (PropertyIQ / "Know Before You Buy").
 - **Can I Buy?** (`EligibilityTab`) — form → LLM research agent verdict, grounded in live India Kanoon lookups, with a deterministic rule-engine floor and an **offline rule-based fallback** if the backend is down. *(Backend-dependent.)*
-- **Decode Contract** (`UnderstandTab`) — upload PDF (Scribe.js, client-side) or paste text → **Explain** or **Analyze Risk** via Gemini, output in the user's chosen language + native script. **Now requires the user to paste their own Gemini key** (in-app box). *(Client-side only; no backend.)*
+- **Decode Contract** (`UnderstandTab`) — upload PDF (Scribe.js, client-side) or paste text → **Explain** or **Analyze Risk** via Gemini, output in the user's chosen language + native script. **Now runs server-side** (`POST /api/understand`): the Gemini key lives in a server env var, the browser sends only the contract text, and the user pastes no key. *(Backend-dependent.)*
 - **Compare Costs** (`StampDutyTab`) and **Toolkit** (`ToolsTab`) — deterministic stamp-duty comparison + reference tools.
 
 ## Architecture
@@ -25,8 +27,7 @@ Live URL: **https://legal-ai-hackathon-gamma.vercel.app** (Vercel project `spunk
   - Local: `server/index.js` (zero-dep Node http, port 8787; Vite proxies `/api` → 8787 via `npm run server`).
   - Vercel: `api/eligibility.js` + `api/health.js` (serverless; `vercel.json` sets `maxDuration: 60`).
 - **Keys now (post-remediation):**
-  - **Client (Decode):** user pastes their Gemini key in the app → stored ONLY in `localStorage` (`propertyiq_gemini_key`). `DEFAULT_GEMINI_KEY` is now `""` — no key ships in the bundle.
-  - **Server (agent):** reads `GEMINI_API_KEYS` (comma-separated, round-robin + 429/503 failover) and `INDIAN_KANOON_TOKEN` from env vars. **No code fallback.** Set these locally (env) and on Vercel.
+  - **Server (both features):** the eligibility agent AND Decode Contract read `GEMINI_API_KEYS` (comma-separated, round-robin + 429/503 failover) and `INDIAN_KANOON_TOKEN` from env vars only. **No code fallback**, and no key ships in the client bundle. Set these locally (env) and on Vercel. Decode's server path is `src/lib/decodeContract.js`, exposed by `api/understand.js` (Vercel) and `server/index.js` (local).
 
 ---
 
@@ -65,7 +66,7 @@ Live URL: **https://legal-ai-hackathon-gamma.vercel.app** (Vercel project `spunk
 
 ## Next steps (prioritized)
 1. **⚠️ ROTATE the leaked credentials** (they were public → compromised): regenerate the Gemini key(s) at https://aistudio.google.com/apikey and reissue the India Kanoon token. (User action.)
-2. **Set fresh Vercel env vars** for the live agent: `GEMINI_API_KEYS` and `INDIAN_KANOON_TOKEN` → Redeploy. The Vercel project still has the OLD env values (`/api/health` reports `gemini:true` from a stale var). Decode does NOT need this — users paste their own key.
+2. **Set fresh Vercel env vars**: `GEMINI_API_KEYS` (comma-separated) and `INDIAN_KANOON_TOKEN` → Redeploy. **Both** the eligibility agent and Decode Contract now use `GEMINI_API_KEYS` server-side, so it must be set for every environment you deploy (Production + Preview). The variable name must be exactly `GEMINI_API_KEYS` (or `GEMINI_API_KEY`) — any other name is ignored.
 3. **(Optional) Purge git history** — old commits still contain the keys (rotation makes them useless, but to scrub): `pip install git-filter-repo` → put each leaked string in `secrets.txt` → `git filter-repo --replace-text secrets.txt` → `git push --force --all`. Rewrites history (done before this repo).
 4. **Optional polish:** extend the live India-Kanoon agent to "Decode Contract" so it cites live sources; add more states/pincodes; address the Vite chunk-size warning (dynamic-import Scribe more aggressively).
 
@@ -91,7 +92,7 @@ Live URL: **https://legal-ai-hackathon-gamma.vercel.app** (Vercel project `spunk
 ## Run locally
 ```bash
 npm install
-npm run dev        # app → http://localhost:5173  (Decode: paste your Gemini key in the in-app box)
+npm run dev        # app → http://localhost:5173  (Decode + eligibility call the backend on :8787)
 
 # Optional, for the "Can I Buy?" live agent (rule-based fallback works without it):
 GEMINI_API_KEYS="<key>" INDIAN_KANOON_TOKEN="<token>" npm run server   # backend → :8787

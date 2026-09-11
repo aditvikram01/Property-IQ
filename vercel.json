@@ -1,7 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "api/eligibility.js": { "maxDuration": 60 },
-    "api/decode.js": { "maxDuration": 60 }
+    "api/eligibility.js": { "maxDuration": 60 }
   }
 }

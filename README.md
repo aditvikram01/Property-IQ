@@ -67,13 +67,18 @@ src/
   lib/               gemini client, contract-decode prompts, PDF parsing
 server/index.js      local backend (AI agent)
 api/                 same backend as Vercel serverless functions
+src/pages/           redesigned UI pages (Home, Compare Costs, Toolkit, shared chrome)
 ```
+
+### Credits
+
+The India state map in `src/data/indiaMap.js` is [`@svg-maps/india`](https://github.com/VictorCazanave/svg-maps) by Victor Cazanave, used under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).
 
 ---
 
 ## Deploy
 
-It's deployed on **Vercel** (connected to GitHub — every push to `main` redeploys).
+Live at **https://propertyiq.vercel.app**, deployed on **Vercel** (connected to GitHub — every push to `main` redeploys).
 
 - The frontend builds with `npm run build`.
 - The backend lives in `api/` as serverless functions (`api/health.js`, `api/eligibility.js`).
