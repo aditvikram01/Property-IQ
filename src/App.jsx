@@ -11,6 +11,10 @@ import { PROPERTY_LAW_DB } from "./data/propertyLawDatabase";
 import INDIA_MAP from "./data/indiaMap.js";
 import { parseDocument } from "./lib/parseDocument";
 import { OUTPUT_LANGUAGES } from "./lib/understand";
+import Home from "./Home";
+
+// Home.jsx calls onNavigate with its own keys; map them to App's tab ids.
+const HOME_NAV = { eligibility: "eligibility", contract: "understand", costs: "stampduty", toolkit: "tools" };
 
 const TABS = [
   { id: "home", label: "Home", icon: "⚖️" },
@@ -479,73 +483,6 @@ function LocalReport({ report, form }) {
   );
 }
 
-
-function HomeTab({ setTab }) {
-  const features = [
-    { icon: "🔍", title: "Can I Buy This Property?", desc: "A personalized eligibility report — permissions, restrictions, costs, and the documents you'll need.", tab: "eligibility", color: "#0d9488" },
-    { icon: "📄", title: "Decode My Contract", desc: "Upload a deed or agreement for a plain-language explanation, and a redline of risky clauses.", tab: "understand", color: "#dc2626" },
-    { icon: "💰", title: "Compare Registration Costs", desc: "Stamp duty, registration charges, and exemptions side by side across states.", tab: "stampduty", color: "#c2410c" },
-    { icon: "🛠️", title: "Property Law Toolkit", desc: "Unit conversion, property identifiers, registration workflows, exemptions, and jurisdiction guidance.", tab: "tools", color: "#9333ea" },
-  ];
-  const mistakes = [
-    { mi: "🚫", t: "Buying land you're not legally allowed to purchase" },
-    { mi: "💰", t: "Unexpected stamp duty and registration costs" },
-    { mi: "⚠️", t: "Hidden risks buried in the agreement you signed" },
-    { mi: "📑", t: "Missing permissions and mandatory documents" },
-    { mi: "⏱", t: "Delays and refusals caused by registration errors" },
-    { mi: "🗺️", t: "Cross-state rules that don't work like back home" },
-  ];
-  return (
-    <div className="home">
-      <section className="hero">
-        <svg className="hero-map-bg" viewBox={INDIA_MAP.viewBox} aria-hidden="true">
-          {INDIA_MAP.locations.map((l) => <path key={l.id} d={l.path} />)}
-        </svg>
-        <div className="hero-inner">
-          <div className="hero-badge">{"⚖️"}</div>
-          <div className="hero-kicker">Your cross-state property copilot</div>
-          <h1 className="hero-title">Buy property with confidence.</h1>
-          <p className="hero-sub">
-            PropertyIQ is your go-to copilot for buying property across states in India — who's allowed to buy,
-            what it will cost, and what's hidden in the contract. All in plain language, backed by real Indian law.
-          </p>
-          <div className="hero-cta-row">
-            <button className="btn btn-primary hero-cta" onClick={() => setTab("eligibility")}>Check if you can buy {"→"}</button>
-            <button className="btn btn-outline hero-cta2" onClick={() => setTab("understand")}>Decode a contract</button>
-          </div>
-        </div>
-      </section>
-
-      <section className="home-body">
-        <div className="feature-grid">
-          {features.map((c) => (
-            <button key={c.tab} className="feature-card" onClick={() => setTab(c.tab)}
-              onMouseEnter={(e) => (e.currentTarget.style.borderColor = c.color)}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}>
-              <div className="fc-arrow">{"→"}</div>
-              <div className="icon-badge" style={{ background: c.color + "1a", color: c.color }}>{c.icon}</div>
-              <div className="title">{c.title}</div>
-              <div className="desc">{c.desc}</div>
-            </button>
-          ))}
-        </div>
-
-        <div className="mistakes">
-          <h3>Avoid expensive property mistakes</h3>
-          <div className="mistakes-grid">
-            {mistakes.map((m, i) => (
-              <div key={i} className="mistake"><span className="mi">{m.mi}</span><span>{m.t}</span></div>
-            ))}
-          </div>
-          <p style={{ fontSize: 13.5, fontWeight: 700, marginTop: 16 }}>Get answers before you spend a rupee on the transaction.</p>
-          <p style={{ fontSize: 11, color: "var(--fg-secondary)", marginTop: 8 }}>
-            States covered: <strong>Himachal Pradesh, Maharashtra, Karnataka, Punjab</strong>. Legal information, not legal advice.
-          </p>
-        </div>
-      </section>
-    </div>
-  );
-}
 
 // Map raw API errors to a calm, user-facing message.
 // Order matters: check auth/key problems FIRST so an invalid/expired key is not
@@ -1627,26 +1564,32 @@ export default function App() {
 
   return (
     <div className="app">
-      <nav className="nav">
-        {TABS.map((t) => (
-          <button key={t.id} className={`nav-btn ${tab === t.id ? "active" : ""}`}
-            onClick={() => setTab(t.id)}>
-            {t.icon} {t.label}
-          </button>
-        ))}
-      </nav>
+      {/* Home ships its own header/nav; suppress the global nav there to avoid a double bar. */}
+      {tab !== "home" && (
+        <nav className="nav">
+          {TABS.map((t) => (
+            <button key={t.id} className={`nav-btn ${tab === t.id ? "active" : ""}`}
+              onClick={() => setTab(t.id)}>
+              {t.icon} {t.label}
+            </button>
+          ))}
+        </nav>
+      )}
 
-      {tab === "home" && <HomeTab setTab={setTab} />}
+      {tab === "home" && <Home onNavigate={(k) => setTab(HOME_NAV[k] || k)} />}
       {tab === "eligibility" && <EligibilityTab />}
       {tab === "understand" && <UnderstandTab />}
       {tab === "stampduty" && <StampDutyTab />}
       {tab === "tools" && <ToolsTab />}
 
-      <footer className="footer">
-        <strong>{"⚖️"} PropertyIQ</strong> {"—"} Know Before You Buy<br />
-        This tool provides legal information, not legal advice. Consult a registered advocate or your nearest DLSA.<br />
-        <span style={{ color: "#999" }}>HP {"•"} Maharashtra {"•"} Karnataka {"•"} Punjab</span>
-      </footer>
+      {/* Home ships its own footer + coverage strip; suppress the global footer there. */}
+      {tab !== "home" && (
+        <footer className="footer">
+          <strong>{"⚖️"} PropertyIQ</strong> {"—"} Know Before You Buy<br />
+          This tool provides legal information, not legal advice. Consult a registered advocate or your nearest DLSA.<br />
+          <span style={{ color: "#999" }}>HP {"•"} Maharashtra {"•"} Karnataka {"•"} Punjab</span>
+        </footer>
+      )}
       <Analytics />
     </div>
   );
