@@ -24,10 +24,9 @@ jobs:
       - run: npm ci
       - name: Run refresh (stage candidates)
         env:
-          # AI key: OpenAI is preferred when set, else Gemini (see lib/llm.js).
+          # OpenAI key (see lib/llm.js). Set OPENAI_API_KEYS or LEGAL_1 in repo secrets.
           OPENAI_API_KEYS: ${{ secrets.OPENAI_API_KEYS }}
           legal_1: ${{ secrets.LEGAL_1 }}
-          GEMINI_API_KEYS: ${{ secrets.GEMINI_API_KEYS }}
           INDIAN_KANOON_TOKEN: ${{ secrets.INDIAN_KANOON_TOKEN }}
         run: npm run refresh-db
       - name: Open PR if the DB changed

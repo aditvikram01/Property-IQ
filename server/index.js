@@ -43,7 +43,6 @@ const server = http.createServer(async (req, res) => {
       indiaKanoon: Boolean(process.env.INDIAN_KANOON_TOKEN),
       provider: s.provider,
       openai: s.openai, openaiKeys: s.openaiKeys,
-      gemini: s.gemini, geminiKeys: s.geminiKeys,
       model: s.model,
     });
   }
@@ -77,5 +76,5 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   const s = providerStatus();
   console.log(`PropertyIQ RAG eligibility backend on http://localhost:${PORT}`);
-  console.log(`  AI provider: ${s.provider || "NONE — set OPENAI_API_KEYS/legal_1 or GEMINI_API_KEYS/legal"}${s.provider ? ` (${s.model}); openai keys: ${s.openaiKeys}, gemini keys: ${s.geminiKeys}` : ""}`);
+  console.log(`  OpenAI: ${s.openai ? `${s.openaiKeys} key(s), ${s.model}` : "NO KEY — set OPENAI_API_KEYS / legal_1"}`);
 });

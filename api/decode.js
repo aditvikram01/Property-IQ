@@ -1,7 +1,7 @@
 // Vercel serverless function — POST /api/decode
 // Server-side "Decode contract" (Explain / Analyze Risk). Uses the shared
-// server-side AI key — OPENAI_API_KEYS / legal_1 (preferred) or GEMINI_API_KEYS /
-// legal (see lib/llm.js). Logic lives in lib/decodeAgent.js (shared with server/index.js).
+// server-side OpenAI key — OPENAI_API_KEYS / legal_1 (see lib/llm.js). Logic
+// lives in lib/decodeAgent.js (shared with server/index.js).
 
 import { runDecode } from "../lib/decodeAgent.js";
 

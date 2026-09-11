@@ -7,11 +7,9 @@ export default function handler(req, res) {
   res.status(200).json({
     ok: true,
     indiaKanoon: Boolean(process.env.INDIAN_KANOON_TOKEN),
-    provider: s.provider,            // "openai" | "gemini" | null
+    provider: s.provider,            // "openai" | null
     openai: s.openai,
     openaiKeys: s.openaiKeys,
-    gemini: s.gemini,
-    geminiKeys: s.geminiKeys,
     model: s.model,
   });
 }
